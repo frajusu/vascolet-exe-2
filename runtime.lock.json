@@ -1,0 +1,13 @@
+{
+  "sourceCommit": "26bf258ab0dc00aa1ec6da81d1ca263f922f8947",
+  "build": {
+    "name": "boxedwine-build-121.zip",
+    "url": "https://boxedwine.org/builds/branches/master/builds/121/artifacts/build-121.zip",
+    "sha256": "bf5183c04e287097ec563cd761c9b4bc02f48123fcb90843cb6021cd39f771d6"
+  },
+  "wine": {
+    "name": "wine11-web.zip",
+    "url": "https://boxedwine.org/v2/latest/TinyCore15Wine11.0-web.zip",
+    "sha256": "ae2ed179324bde6e3605c2ddeb27406654790077f1885d670d1f402800dfbdf4"
+  }
+}
