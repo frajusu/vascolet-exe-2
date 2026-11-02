@@ -105,9 +105,18 @@ const state=new Uint8Array(332);
 function inputPacket(bytes){if(!window.nativeInput)return;const line=bytes[0]===0xc1?`K:${bytes[1]|bytes[2]<<8}:${bytes[3]}\n`:`M:${bytes[1]|bytes[2]<<8}:${bytes[3]|bytes[4]<<8}:${bytes[5]}\n`;for(const byte of new TextEncoder().encode(line))window.nativeInput(byte);}
 window.connectInput=async device=>{};
 const keymap={ArrowUp:273,ArrowDown:274,ArrowRight:275,ArrowLeft:276,Escape:27,Enter:13,' ':32,Shift:304,Control:306,Backspace:8,Tab:9};
-function key(event,down){const code=keymap[event.key]??(event.key.length===1?event.key.toLowerCase().charCodeAt(0):0);if(code&&code<323){bridgeStats.sentKeys=(bridgeStats.sentKeys||0)+1;state[code]=down?1:0;inputPacket([0xc1,code&255,code>>8,down?1:0]);event.preventDefault();}audio?.resume();}
+const physicalKeys=new Set(),virtualKeys=new Set();
+function gameKey(key,down,source){const code=keymap[key]??(key.length===1?key.toLowerCase().charCodeAt(0):0);if(!code||code>=323)return false;down?source.add(code):source.delete(code);const active=physicalKeys.has(code)||virtualKeys.has(code);if(state[code]!==Number(active)){bridgeStats.sentKeys=(bridgeStats.sentKeys||0)+1;state[code]=Number(active);inputPacket([0xc1,code&255,code>>8,active?1:0]);}return true;}
+window.setGameKey=(key,down)=>{if(down)audioContext().resume().catch(()=>{});return gameKey(key,down,virtualKeys);};
+function key(event,down){if(gameKey(event.key,down,physicalKeys))event.preventDefault();audio?.resume();}
 window.addEventListener('keydown',e=>key(e,true));window.addEventListener('keyup',e=>key(e,false));
 function mouse(event,down){const rect=canvas.getBoundingClientRect(),scale=Math.min(rect.width/canvas.width,rect.height/canvas.height),left=rect.left+(rect.width-canvas.width*scale)/2,top=rect.top+(rect.height-canvas.height*scale)/2,iw=inputWidth||canvas.width,ih=inputHeight||canvas.height,x=Math.max(0,Math.min(iw-1,(event.clientX-left)/scale*iw/canvas.width)),y=Math.max(0,Math.min(ih-1,(event.clientY-top)/scale*ih/canvas.height)),v=new DataView(state.buffer);v.setUint16(324,x,true);v.setUint16(326,y,true);if(down!==undefined)state[328]=down?1:0;inputPacket([0xc2,x&255,x>>8,y&255,y>>8,state[328]]);if(down){audioContext().resume();canvas.focus();}}
-canvas.addEventListener('mousemove',e=>mouse(e));canvas.addEventListener('mousedown',e=>mouse(e,true));window.addEventListener('mouseup',e=>mouse(e,false));
-window.addEventListener('blur',()=>{for(let code=0;code<323;code++)if(state[code])inputPacket([0xc1,code&255,code>>8,0]);state.fill(0);inputPacket([0xc2,0,0,0,0,0]);});
+let canvasPointer=null,canvasDownAt=0,canvasReleaseTimer;
+canvas.style.touchAction='none';
+canvas.addEventListener('pointerdown',event=>{if(event.button!==0||canvasPointer!==null)return;event.preventDefault();clearTimeout(canvasReleaseTimer);canvasPointer=event.pointerId;canvasDownAt=performance.now();canvas.setPointerCapture(event.pointerId);mouse(event,true);});
+canvas.addEventListener('pointermove',event=>{if(event.pointerType==='mouse'||event.pointerId===canvasPointer)mouse(event);});
+window.addEventListener('pointerup',event=>{if(event.pointerId!==canvasPointer)return;event.preventDefault();canvasPointer=null;const wait=event.pointerType==='touch'?Math.max(0,140-(performance.now()-canvasDownAt)):0;canvasReleaseTimer=setTimeout(()=>mouse(event,false),wait);});
+function cancelCanvasPointer(event){if(event.pointerId!==canvasPointer)return;canvasPointer=null;clearTimeout(canvasReleaseTimer);mouse(event,false);}
+canvas.addEventListener('pointercancel',cancelCanvasPointer);canvas.addEventListener('lostpointercapture',cancelCanvasPointer);
+window.addEventListener('blur',()=>{canvasPointer=null;clearTimeout(canvasReleaseTimer);physicalKeys.clear();virtualKeys.clear();for(let code=0;code<323;code++)if(state[code])inputPacket([0xc1,code&255,code>>8,0]);state.fill(0);inputPacket([0xc2,0,0,0,0,0]);});
 window.addEventListener('pagehide',()=>{for(const key of [...channels.keys()])stopSound(key);audio?.close().catch(()=>{});});

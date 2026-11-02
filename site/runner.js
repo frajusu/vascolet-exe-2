@@ -19,6 +19,16 @@
     if(times.length>6000)times.splice(0,times.length-6000);
   }
   Module.vascoletFrame=presented;
+  const touchKeys=new Set();
+  const touchKeyCodes={ArrowUp:['ArrowUp',38],ArrowDown:['ArrowDown',40],ArrowLeft:['ArrowLeft',37],ArrowRight:['ArrowRight',39],Escape:['Escape',27],Enter:['Enter',13],' ':['Space',32],z:['KeyZ',90],x:['KeyX',88]};
+  window.setGameKey=(key,down)=>{
+    const mapping=touchKeyCodes[key];if(!mapping||touchKeys.has(key)===down)return false;
+    down?touchKeys.add(key):touchKeys.delete(key);
+    const target=Module.canvas||document.querySelector('canvas')||document;
+    target.dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{key,code:mapping[0],keyCode:mapping[1],which:mapping[1],bubbles:true,cancelable:true}));
+    return true;
+  };
+  window.addEventListener('blur',()=>{for(const key of [...touchKeys])window.setGameKey(key,false);});
   let logQueue = [];
   document.getElementById('showConsole').checked = false;
   // Fetch the large independent archives concurrently, instead of serially.

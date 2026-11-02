@@ -9,8 +9,8 @@ function note(text) { logs.push(String(text)); if (logs.length > 600) logs.shift
 function preference(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
 function remember() { settings = {engine: $('engine').value, sound: $('sound').checked}; try { localStorage.setItem(`vascolet-exe-${game.number}-settings`, JSON.stringify(settings)); } catch {} }
 function modeLabel(){return {xo:'XO · CheerpX',mt:'JIT multihilo',jit:'JIT de un hilo'}[currentMode];}
-function menu(open) { $('menu').hidden = !open; $('menu-toggle').setAttribute('aria-expanded', String(open)); if (open) $('close-menu').focus(); else { $('emulator').focus(); } }
-function failure(text) { clearTimeout(watchdog); $('boot').hidden = false; $('boot-text').textContent = text; $('progress').hidden = true; $('retry').hidden = false; note(text); }
+function menu(open) { if(open)window.touchControls?.releaseAll();$('menu').hidden = !open; $('menu-toggle').setAttribute('aria-expanded', String(open));window.touchControls?.refresh(); if (open) $('close-menu').focus(); else { $('emulator').focus(); } }
+function failure(text) { clearTimeout(watchdog); $('boot').hidden = false; $('boot-text').textContent = text; $('progress').hidden = true; $('retry').hidden = false;window.touchControls?.refresh(); note(text); }
 function request(action, data) {
   return new Promise((resolve, reject) => {
     const id = ++serial;
@@ -40,7 +40,9 @@ async function isolated() {
   } catch (error) { note(`Aislamiento: ${error.message}`); return false; }
 }
 function launch() {
+  window.touchControls?.releaseAll();
   ready = false; started = performance.now(); clearTimeout(watchdog);
+  window.touchControls?.refresh();
   for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error('Se reinició el emulador.')); } pending.clear();
   const canThread = crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined';
   currentMode = settings.engine === 'jit' || !canThread || settings.engine==='auto' && game.number===1 ? 'jit' : 'mt';
@@ -62,7 +64,7 @@ window.addEventListener('message', event => {
   if (message.type === 'reply') { const item = pending.get(message.id); if (item) { clearTimeout(item.timer); pending.delete(message.id); message.error ? item.reject(new Error(message.error)) : item.resolve(message.data); } }
   if (message.type === 'log') note(message.text);
   if (message.type === 'progress' && !ready) { $('boot-text').textContent = message.text; if (message.total > 0) { $('progress').max = message.total; $('progress').value = message.loaded; } else $('progress').removeAttribute('value'); }
-  if (message.type === 'ready') { ready = true; clearTimeout(watchdog); $('boot').hidden = true; window.vascoletBackup = null; const seconds = ((performance.now()-started)/1000).toFixed(1); $('runtime-status').textContent = `${modeLabel()} · arranque ${seconds} s`; $('emulator').focus(); }
+  if (message.type === 'ready') { ready = true; clearTimeout(watchdog); $('boot').hidden = true; window.vascoletBackup = null; const seconds = ((performance.now()-started)/1000).toFixed(1); $('runtime-status').textContent = `${modeLabel()} · arranque ${seconds} s`; $('emulator').focus();window.touchControls?.refresh(); }
   if (message.type === 'saved') { $('save-status').textContent = `Archivos sincronizados · ${new Date().toLocaleTimeString()}`; }
   if (message.type === 'save-error') $('save-status').textContent = `No se pudo guardar: ${message.text}. Exportá una copia antes de cerrar.`;
   if (message.type === 'error') {
@@ -97,13 +99,14 @@ async function boot() {
   try {
     const response = await fetch('game.json'); if (!response.ok) throw new Error(`Configuración: HTTP ${response.status}`);
     game = await response.json(); document.title = `Vascolet ${game.number}`; $('title').textContent = document.title; $('repo').href = `https://github.com/frajusu/vascolet-exe-${game.number}`;
+    window.touchControls?.configure(game.number);
     settings = preference(`vascolet-exe-${game.number}-settings`, {engine:'auto',sound:true});
     if (!['auto','mt','jit','xo'].includes(settings.engine)||settings.engine==='xo'&&!game.xoEngine) settings.engine = 'auto';
     $('xo-option').hidden=!game.xoEngine;
     $('engine').value = settings.engine; $('sound').checked = settings.sound !== false;
     for (let number=1;number<=4;number++) {
       const a = document.createElement('a'); a.href = `../vascolet-exe-${number}/`; a.textContent = number; a.setAttribute('aria-label',`Vascolet ${number}`); if (number===game.number) a.setAttribute('aria-current','page');
-      a.onclick = async event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.button!==0) return; event.preventDefault(); try { await flush(); location.href = a.href; } catch {} };
+      a.onclick = async event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.button!==0) return; event.preventDefault();window.touchControls?.releaseAll(); try { await flush(); location.href = a.href; } catch {} };
       $('games').append(a);
     }
     const result = await isolated(); if (result === null) return;

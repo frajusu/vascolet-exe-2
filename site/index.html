@@ -2,22 +2,36 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0a0a0c">
   <title>Vascolet</title>
   <link rel="stylesheet" href="style.css">
   <script src="launcher.js" defer></script>
+  <script src="touch-controls.js" defer></script>
 </head>
 <body>
   <main id="stage"><iframe id="emulator" title="Vascolet original" allow="autoplay; fullscreen; gamepad; cross-origin-isolated" hidden></iframe></main>
   <div id="boot" role="status"><div><p id="boot-text">Cargando…</p><progress id="progress" aria-label="Descarga del juego"></progress><button id="retry" hidden>Volver a intentar</button></div></div>
   <nav id="games" aria-label="Cambiar de Vascolet"></nav>
   <button id="menu-toggle" aria-label="Abrir menú" aria-controls="menu" aria-expanded="false">☰</button>
+  <section id="touch-controls" aria-label="Controles táctiles del juego" hidden>
+    <div id="touch-dpad" aria-label="Dirección; deslizá para cambiar o combinar flechas">
+      <button type="button" data-key="ArrowUp" class="pad-up" aria-label="Arriba" aria-pressed="false">▲</button>
+      <button type="button" data-key="ArrowLeft" class="pad-left" aria-label="Izquierda" aria-pressed="false">◀</button>
+      <span class="pad-center" aria-hidden="true"></span>
+      <button type="button" data-key="ArrowRight" class="pad-right" aria-label="Derecha" aria-pressed="false">▶</button>
+      <button type="button" data-key="ArrowDown" class="pad-down" aria-label="Abajo" aria-pressed="false">▼</button>
+    </div>
+    <div class="touch-utility"><button type="button" data-key="Escape" aria-label="Escape: pausa o volver" aria-pressed="false">Esc</button><button type="button" data-key="Enter" aria-label="Enter: aceptar o continuar" aria-pressed="false">Enter ↵</button></div>
+    <div id="touch-actions" aria-label="Acciones"></div>
+  </section>
   <aside id="menu" aria-label="Opciones" hidden>
     <div class="menu-heading"><h1 id="title">Vascolet</h1><button id="close-menu" aria-label="Cerrar menú">×</button></div>
     <p id="runtime-status" class="muted" role="status">Preparando…</p>
     <label>Motor<select id="engine"><option value="auto">Automático</option><option value="xo" id="xo-option" hidden>XO · CheerpX (experimental)</option><option value="mt">JIT multihilo</option><option value="jit">JIT de un hilo · compatibilidad</option></select></label>
     <label class="check"><input id="sound" type="checkbox" checked> Sonido</label>
+    <label class="check"><input id="touch-enabled" type="checkbox"> Controles táctiles</label>
+    <p id="touch-hint" class="muted" hidden>Podés mantener una dirección y una acción a la vez. Tocá directamente el juego para usar sus menús.</p>
     <button id="restart">Aplicar y reiniciar</button>
     <button id="fullscreen">Pantalla completa</button>
     <hr>
