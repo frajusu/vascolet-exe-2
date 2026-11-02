@@ -7,9 +7,9 @@
   "compiler": "Zig 0.13.0; x86-linux-gnu.2.17 -O2; native-init x86-linux-musl -static -Os",
   "files": {
     "lib/ld-linux.so.2": "9cc99c379376d7ab686179c21a7609f4a53a56cc51dc653b133642451827eb56",
-    "lib/libSDL-1.2.so.0": "19ae0db0858f01df20bc1ddc495fb7959e16e49728277f1576b3fc4913edc643",
+    "lib/libSDL-1.2.so.0": "e06edfd350763eea8defbda1302edf845825ec7524a7dbb46202ff302af776ed",
     "lib/libNAT-1.2.so.0": "a879b131b1597538c49034ae6b654310236fa38b6d8af4339b637b1d6493c243",
-    "lib/libSDL_mixer-1.2.so.0": "9aef4e81006effa56a5482970bd7f472190d81526293e4d186a80e0388ce4049",
+    "lib/libSDL_mixer-1.2.so.0": "642f3b5add5e296eddab79c9fec81fddeb6112efb3ab619e174f982c579e0ed4",
     "lib/libSDL_image-1.2.so.0": "d9e5dc1cd7cfefa810a64bc176d8223074ad167b8791f4452a937a0391db25c3",
     "lib/libstdc++.so.6": "5cb2c2685ac5973922004eed349fa9989b2eb3b4e0fe180f5484d373a8ac4675",
     "lib/libgcc_s.so.1": "4f3877cf36a72d6019eea2cd67ede0293fb0bd33103795ba08b2d75635153084",
@@ -23,11 +23,11 @@
     "lib/libpng.so.3": "6d70b92ce21395abd646dd0a30fe14b06a4697ab3ae5eada328e57b617366d73",
     "bin/native-init": "f55d6411d047a282de54d01af1bdcf956742a0d92fe31745afdb713e19f64002",
     "app/vascolet2": "3b72aabb6efb3add5b68961f2a1a952201f8347602cbfe1782bc742c50158537",
-    "app/index.html": "f182870f864e70294d1689d2568618a2b18e2d52f4c2e445a23f8308f2493cc5",
-    "lib/index.html": "f182870f864e70294d1689d2568618a2b18e2d52f4c2e445a23f8308f2493cc5",
     "bin/index.html": "f182870f864e70294d1689d2568618a2b18e2d52f4c2e445a23f8308f2493cc5",
-    "app/index.list": "1ea8eb1c4c2dc6c66d37326964334b3d9383d7c4a7220b7d819c551a9981e0c2",
+    "lib/index.html": "f182870f864e70294d1689d2568618a2b18e2d52f4c2e445a23f8308f2493cc5",
+    "app/index.html": "f182870f864e70294d1689d2568618a2b18e2d52f4c2e445a23f8308f2493cc5",
+    "bin/index.list": "a7a63f36d941da28e5b6def05769ef908e05e63bee7c12cc862b4f30b14fb718",
     "lib/index.list": "86f5c5bceb31b66f86543e5984fde1e244693fc63f3b95b8981363f6c8c2e1ef",
-    "bin/index.list": "a7a63f36d941da28e5b6def05769ef908e05e63bee7c12cc862b4f30b14fb718"
+    "app/index.list": "1ea8eb1c4c2dc6c66d37326964334b3d9383d7c4a7220b7d819c551a9981e0c2"
   }
 }

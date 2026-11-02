@@ -70,11 +70,12 @@ try{
   if(config.trace){window.nativeActivity={};for(const name of ['cpuActivity','diskActivity'])cx.registerCallback(name,value=>{window.nativeActivity[name]=value;});}
   const env=['LD_LIBRARY_PATH=/lib','HOME=/home',`SUGAR_ACTIVITY_ROOT=/home/vascolet${config.number}`,'SUGAR_BUNDLE_PATH=/game','SDL_VIDEODRIVER=dummy','SDL_AUDIODRIVER=dummy'];
   if(config.trace)env.push('BROWSER_SDL_TRACE=1');
+  if(params.get('renderer')==='software')env.push('BROWSER_SOFTWARE_RENDERER=1');
   const setup=await cx.run('/bin/native-init',['--prepare',config.version],{env,cwd:'/',uid:0,gid:0});
   if(setup.status!==0)throw new Error(`No se pudieron preparar los archivos XO (${setup.status}).`);
   if(parent.vascoletBackup)await restore(parent.vascoletBackup);
   progress('Iniciando XO…');
   window.onFirstFrame=()=>{ready=true;send('ready');send('log',{text:`XO original iniciado en ${((performance.now()-started)/1000).toFixed(1)} s; entorno ${warm?'conservado':'nuevo'}.`});document.getElementById('display').focus();};
-  const result=await cx.run('/app/'+config.program,[],{env,cwd:'/game',uid:0,gid:0});
+  const result=await cx.run(config.entry||'/app/'+config.program,[],{env,cwd:'/game',uid:0,gid:0});
   send('error',{text:result.status?`El juego XO se detuvo (${result.status}).`:'El juego se cerró. Podés reiniciarlo desde el menú.'});
 }catch(error){send('error',{text:`XO · CheerpX: ${error.message}`});}

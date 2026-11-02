@@ -2,13 +2,16 @@
 
 [Abrir juego](https://frajusu.github.io/vascolet-exe-2/)
 
-El EXE original y sus recursos corren en Boxedwine + Wine 11 / WebAssembly.
+Por defecto se ejecuta el ELF XO original con CheerpX, Canvas y Web Audio.
+Los modos Boxedwine + Wine del EXE original siguen disponibles en el menú.
+Ver [estado y mediciones del motor XO](docs/CHEERPX.md).
 La pantalla está dedicada al juego, como los ports `-web`. Las opciones están
 en el botón ☰. Los botones 1–4 cambian de Vascolet.
 
 ## Motores y carga
 
-- JIT multihilo con SharedArrayBuffer y OffscreenCanvas, por defecto cuando el
+- XO con CheerpX por defecto cuando hay aislamiento de origen.
+- Wine JIT multihilo con SharedArrayBuffer y OffscreenCanvas, disponible cuando el
   navegador permite aislamiento de origen. Un service worker agrega COOP/COEP
   en GitHub Pages; requiere una recarga automática en la primera visita.
 - JIT de un hilo como alternativa y fallback si falla la inicialización del
@@ -42,8 +45,8 @@ python -m http.server 8000 --directory dist
 ```
 
 Python 3.11+, Internet para el primer build. Chrome/Edge o Firefox actualizado
-en PC. La primera visita carga aproximadamente 130–156 MB; las siguientes usan
-la caché local. El modo JIT de esta compilación no soporta Safari.
+en PC. La primera visita descarga los recursos del motor seleccionado; las
+siguientes usan la caché local. El modo Wine JIT de esta compilación no soporta Safari.
 
 Actions genera `dist/` y publica GitHub Pages. Las descargas se verifican con
 los hashes de `runtime.lock.json`. El pin Wine upstream contiene `latest`:
