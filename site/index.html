@@ -16,13 +16,13 @@
   <aside id="menu" aria-label="Opciones" hidden>
     <div class="menu-heading"><h1 id="title">Vascolet</h1><button id="close-menu" aria-label="Cerrar menú">×</button></div>
     <p id="runtime-status" class="muted" role="status">Preparando…</p>
-    <label>Motor<select id="engine"><option value="auto">Automático · JIT multihilo</option><option value="mt">JIT multihilo</option><option value="jit">JIT de un hilo · compatibilidad</option></select></label>
+    <label>Motor<select id="engine"><option value="auto">Automático</option><option value="xo" id="xo-option" hidden>XO · CheerpX (experimental)</option><option value="mt">JIT multihilo</option><option value="jit">JIT de un hilo · compatibilidad</option></select></label>
     <label class="check"><input id="sound" type="checkbox" checked> Sonido</label>
     <button id="restart">Aplicar y reiniciar</button>
     <button id="fullscreen">Pantalla completa</button>
     <hr>
     <h2>Partida</h2>
-    <p class="muted">Se conservan los archivos que guarda el juego en este navegador. Usá también el guardado del propio juego.</p>
+    <p class="muted">Se conservan los archivos que guarda el juego en este navegador. Usá también el guardado del propio juego. XO y Windows guardan sus partidas por separado.</p>
     <p id="save-status" class="muted" role="status">Guardado automático en IndexedDB.</p>
     <div class="row"><button id="export-save">Exportar</button><button id="import-save">Importar</button></div>
     <input id="save-file" type="file" accept="application/json,.json" hidden>

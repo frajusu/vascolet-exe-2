@@ -1,0 +1,1297 @@
+[
+  {
+    "module": "libc.so.6",
+    "address": 1334822,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1334826,
+    "original": "660fe74210",
+    "replacement": "660f7f4210",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1334831,
+    "original": "660fe74220",
+    "replacement": "660f7f4220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1334836,
+    "original": "660fe74230",
+    "replacement": "660f7f4230",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1334841,
+    "original": "660fe74240",
+    "replacement": "660f7f4240",
+    "instruction": "movntdq xmmword ptr [edx + 0x40], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1334846,
+    "original": "660fe74250",
+    "replacement": "660f7f4250",
+    "instruction": "movntdq xmmword ptr [edx + 0x50], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1334851,
+    "original": "660fe74260",
+    "replacement": "660f7f4260",
+    "instruction": "movntdq xmmword ptr [edx + 0x60], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1334856,
+    "original": "660fe74270",
+    "replacement": "660f7f4270",
+    "instruction": "movntdq xmmword ptr [edx + 0x70], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1336406,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1336410,
+    "original": "660fe74210",
+    "replacement": "660f7f4210",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1336415,
+    "original": "660fe74220",
+    "replacement": "660f7f4220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1336420,
+    "original": "660fe74230",
+    "replacement": "660f7f4230",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1336425,
+    "original": "660fe74240",
+    "replacement": "660f7f4240",
+    "instruction": "movntdq xmmword ptr [edx + 0x40], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1336430,
+    "original": "660fe74250",
+    "replacement": "660f7f4250",
+    "instruction": "movntdq xmmword ptr [edx + 0x50], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1336435,
+    "original": "660fe74260",
+    "replacement": "660f7f4260",
+    "instruction": "movntdq xmmword ptr [edx + 0x60], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1336440,
+    "original": "660fe74270",
+    "replacement": "660f7f4270",
+    "instruction": "movntdq xmmword ptr [edx + 0x70], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1340612,
+    "original": "660fe741c0",
+    "replacement": "660f7f41c0",
+    "instruction": "movntdq xmmword ptr [ecx - 0x40], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1340620,
+    "original": "660fe749d0",
+    "replacement": "660f7f49d0",
+    "instruction": "movntdq xmmword ptr [ecx - 0x30], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1340625,
+    "original": "660fe751e0",
+    "replacement": "660f7f51e0",
+    "instruction": "movntdq xmmword ptr [ecx - 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1340630,
+    "original": "660fe759f0",
+    "replacement": "660f7f59f0",
+    "instruction": "movntdq xmmword ptr [ecx - 0x10], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341203,
+    "original": "660fe701",
+    "replacement": "660f7f01",
+    "instruction": "movntdq xmmword ptr [ecx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341210,
+    "original": "660fe74910",
+    "replacement": "660f7f4910",
+    "instruction": "movntdq xmmword ptr [ecx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341215,
+    "original": "660fe75120",
+    "replacement": "660f7f5120",
+    "instruction": "movntdq xmmword ptr [ecx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341220,
+    "original": "660fe75930",
+    "replacement": "660f7f5930",
+    "instruction": "movntdq xmmword ptr [ecx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341887,
+    "original": "660fe703",
+    "replacement": "660f7f03",
+    "instruction": "movntdq xmmword ptr [ebx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341891,
+    "original": "660fe74b10",
+    "replacement": "660f7f4b10",
+    "instruction": "movntdq xmmword ptr [ebx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341896,
+    "original": "660fe75320",
+    "replacement": "660f7f5320",
+    "instruction": "movntdq xmmword ptr [ebx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341901,
+    "original": "660fe75b30",
+    "replacement": "660f7f5b30",
+    "instruction": "movntdq xmmword ptr [ebx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341906,
+    "original": "660fe76340",
+    "replacement": "660f7f6340",
+    "instruction": "movntdq xmmword ptr [ebx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341911,
+    "original": "660fe76b50",
+    "replacement": "660f7f6b50",
+    "instruction": "movntdq xmmword ptr [ebx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341916,
+    "original": "660fe77360",
+    "replacement": "660f7f7360",
+    "instruction": "movntdq xmmword ptr [ebx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1341921,
+    "original": "660fe77b70",
+    "replacement": "660f7f7b70",
+    "instruction": "movntdq xmmword ptr [ebx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1342687,
+    "original": "660fe703",
+    "replacement": "660f7f03",
+    "instruction": "movntdq xmmword ptr [ebx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1342691,
+    "original": "660fe74b10",
+    "replacement": "660f7f4b10",
+    "instruction": "movntdq xmmword ptr [ebx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1342696,
+    "original": "660fe75320",
+    "replacement": "660f7f5320",
+    "instruction": "movntdq xmmword ptr [ebx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1342701,
+    "original": "660fe75b30",
+    "replacement": "660f7f5b30",
+    "instruction": "movntdq xmmword ptr [ebx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1342706,
+    "original": "660fe76340",
+    "replacement": "660f7f6340",
+    "instruction": "movntdq xmmword ptr [ebx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1342711,
+    "original": "660fe76b50",
+    "replacement": "660f7f6b50",
+    "instruction": "movntdq xmmword ptr [ebx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1342716,
+    "original": "660fe77360",
+    "replacement": "660f7f7360",
+    "instruction": "movntdq xmmword ptr [ebx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1342721,
+    "original": "660fe77b70",
+    "replacement": "660f7f7b70",
+    "instruction": "movntdq xmmword ptr [ebx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1343487,
+    "original": "660fe703",
+    "replacement": "660f7f03",
+    "instruction": "movntdq xmmword ptr [ebx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1343491,
+    "original": "660fe74b10",
+    "replacement": "660f7f4b10",
+    "instruction": "movntdq xmmword ptr [ebx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1343496,
+    "original": "660fe75320",
+    "replacement": "660f7f5320",
+    "instruction": "movntdq xmmword ptr [ebx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1343501,
+    "original": "660fe75b30",
+    "replacement": "660f7f5b30",
+    "instruction": "movntdq xmmword ptr [ebx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1343506,
+    "original": "660fe76340",
+    "replacement": "660f7f6340",
+    "instruction": "movntdq xmmword ptr [ebx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1343511,
+    "original": "660fe76b50",
+    "replacement": "660f7f6b50",
+    "instruction": "movntdq xmmword ptr [ebx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1343516,
+    "original": "660fe77360",
+    "replacement": "660f7f7360",
+    "instruction": "movntdq xmmword ptr [ebx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1343521,
+    "original": "660fe77b70",
+    "replacement": "660f7f7b70",
+    "instruction": "movntdq xmmword ptr [ebx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1344180,
+    "original": "660fe741c0",
+    "replacement": "660f7f41c0",
+    "instruction": "movntdq xmmword ptr [ecx - 0x40], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1344188,
+    "original": "660fe749d0",
+    "replacement": "660f7f49d0",
+    "instruction": "movntdq xmmword ptr [ecx - 0x30], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1344193,
+    "original": "660fe751e0",
+    "replacement": "660f7f51e0",
+    "instruction": "movntdq xmmword ptr [ecx - 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1344198,
+    "original": "660fe759f0",
+    "replacement": "660f7f59f0",
+    "instruction": "movntdq xmmword ptr [ecx - 0x10], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1344771,
+    "original": "660fe701",
+    "replacement": "660f7f01",
+    "instruction": "movntdq xmmword ptr [ecx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1344778,
+    "original": "660fe74910",
+    "replacement": "660f7f4910",
+    "instruction": "movntdq xmmword ptr [ecx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1344783,
+    "original": "660fe75120",
+    "replacement": "660f7f5120",
+    "instruction": "movntdq xmmword ptr [ecx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1344788,
+    "original": "660fe75930",
+    "replacement": "660f7f5930",
+    "instruction": "movntdq xmmword ptr [ecx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1345455,
+    "original": "660fe703",
+    "replacement": "660f7f03",
+    "instruction": "movntdq xmmword ptr [ebx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1345459,
+    "original": "660fe74b10",
+    "replacement": "660f7f4b10",
+    "instruction": "movntdq xmmword ptr [ebx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1345464,
+    "original": "660fe75320",
+    "replacement": "660f7f5320",
+    "instruction": "movntdq xmmword ptr [ebx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1345469,
+    "original": "660fe75b30",
+    "replacement": "660f7f5b30",
+    "instruction": "movntdq xmmword ptr [ebx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1345474,
+    "original": "660fe76340",
+    "replacement": "660f7f6340",
+    "instruction": "movntdq xmmword ptr [ebx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1345479,
+    "original": "660fe76b50",
+    "replacement": "660f7f6b50",
+    "instruction": "movntdq xmmword ptr [ebx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1345484,
+    "original": "660fe77360",
+    "replacement": "660f7f7360",
+    "instruction": "movntdq xmmword ptr [ebx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1345489,
+    "original": "660fe77b70",
+    "replacement": "660f7f7b70",
+    "instruction": "movntdq xmmword ptr [ebx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1352967,
+    "original": "660fe70a",
+    "replacement": "660f7f0a",
+    "instruction": "movntdq xmmword ptr [edx], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353043,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353047,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353052,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353057,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353062,
+    "original": "660fe76240",
+    "replacement": "660f7f6240",
+    "instruction": "movntdq xmmword ptr [edx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353067,
+    "original": "660fe76a50",
+    "replacement": "660f7f6a50",
+    "instruction": "movntdq xmmword ptr [edx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353072,
+    "original": "660fe77260",
+    "replacement": "660f7f7260",
+    "instruction": "movntdq xmmword ptr [edx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353077,
+    "original": "660fe77a70",
+    "replacement": "660f7f7a70",
+    "instruction": "movntdq xmmword ptr [edx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353123,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353127,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353132,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353137,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353165,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1353169,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361063,
+    "original": "660fe70a",
+    "replacement": "660f7f0a",
+    "instruction": "movntdq xmmword ptr [edx], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361139,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361143,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361148,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361153,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361158,
+    "original": "660fe76240",
+    "replacement": "660f7f6240",
+    "instruction": "movntdq xmmword ptr [edx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361163,
+    "original": "660fe76a50",
+    "replacement": "660f7f6a50",
+    "instruction": "movntdq xmmword ptr [edx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361168,
+    "original": "660fe77260",
+    "replacement": "660f7f7260",
+    "instruction": "movntdq xmmword ptr [edx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361173,
+    "original": "660fe77a70",
+    "replacement": "660f7f7a70",
+    "instruction": "movntdq xmmword ptr [edx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361219,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361223,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361228,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361233,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361261,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1361265,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369615,
+    "original": "660fe70a",
+    "replacement": "660f7f0a",
+    "instruction": "movntdq xmmword ptr [edx], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369683,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369687,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369692,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369697,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369702,
+    "original": "660fe76240",
+    "replacement": "660f7f6240",
+    "instruction": "movntdq xmmword ptr [edx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369707,
+    "original": "660fe76a50",
+    "replacement": "660f7f6a50",
+    "instruction": "movntdq xmmword ptr [edx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369712,
+    "original": "660fe77260",
+    "replacement": "660f7f7260",
+    "instruction": "movntdq xmmword ptr [edx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369717,
+    "original": "660fe77a70",
+    "replacement": "660f7f7a70",
+    "instruction": "movntdq xmmword ptr [edx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369763,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369767,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369772,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369777,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369805,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1369809,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374152,
+    "original": "660fe70a",
+    "replacement": "660f7f0a",
+    "instruction": "movntdq xmmword ptr [edx], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374249,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374253,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374258,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374263,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374268,
+    "original": "660fe76240",
+    "replacement": "660f7f6240",
+    "instruction": "movntdq xmmword ptr [edx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374273,
+    "original": "660fe76a50",
+    "replacement": "660f7f6a50",
+    "instruction": "movntdq xmmword ptr [edx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374278,
+    "original": "660fe77260",
+    "replacement": "660f7f7260",
+    "instruction": "movntdq xmmword ptr [edx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374283,
+    "original": "660fe77a70",
+    "replacement": "660f7f7a70",
+    "instruction": "movntdq xmmword ptr [edx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374329,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374333,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374338,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374343,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374371,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1374375,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378200,
+    "original": "660fe70a",
+    "replacement": "660f7f0a",
+    "instruction": "movntdq xmmword ptr [edx], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378297,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378301,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378306,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378311,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378316,
+    "original": "660fe76240",
+    "replacement": "660f7f6240",
+    "instruction": "movntdq xmmword ptr [edx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378321,
+    "original": "660fe76a50",
+    "replacement": "660f7f6a50",
+    "instruction": "movntdq xmmword ptr [edx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378326,
+    "original": "660fe77260",
+    "replacement": "660f7f7260",
+    "instruction": "movntdq xmmword ptr [edx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378331,
+    "original": "660fe77a70",
+    "replacement": "660f7f7a70",
+    "instruction": "movntdq xmmword ptr [edx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378377,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378381,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378386,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378391,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378419,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1378423,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382312,
+    "original": "660fe70a",
+    "replacement": "660f7f0a",
+    "instruction": "movntdq xmmword ptr [edx], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382409,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382413,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382418,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382423,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382428,
+    "original": "660fe76240",
+    "replacement": "660f7f6240",
+    "instruction": "movntdq xmmword ptr [edx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382433,
+    "original": "660fe76a50",
+    "replacement": "660f7f6a50",
+    "instruction": "movntdq xmmword ptr [edx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382438,
+    "original": "660fe77260",
+    "replacement": "660f7f7260",
+    "instruction": "movntdq xmmword ptr [edx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382443,
+    "original": "660fe77a70",
+    "replacement": "660f7f7a70",
+    "instruction": "movntdq xmmword ptr [edx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382489,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382493,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382498,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382503,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382531,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1382535,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390815,
+    "original": "660fe70a",
+    "replacement": "660f7f0a",
+    "instruction": "movntdq xmmword ptr [edx], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390883,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390887,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390892,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390897,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390902,
+    "original": "660fe76240",
+    "replacement": "660f7f6240",
+    "instruction": "movntdq xmmword ptr [edx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390907,
+    "original": "660fe76a50",
+    "replacement": "660f7f6a50",
+    "instruction": "movntdq xmmword ptr [edx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390912,
+    "original": "660fe77260",
+    "replacement": "660f7f7260",
+    "instruction": "movntdq xmmword ptr [edx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390917,
+    "original": "660fe77a70",
+    "replacement": "660f7f7a70",
+    "instruction": "movntdq xmmword ptr [edx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390963,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390967,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390972,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1390977,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1391005,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1391009,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395304,
+    "original": "660fe70a",
+    "replacement": "660f7f0a",
+    "instruction": "movntdq xmmword ptr [edx], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395401,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395405,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395410,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395415,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395420,
+    "original": "660fe76240",
+    "replacement": "660f7f6240",
+    "instruction": "movntdq xmmword ptr [edx + 0x40], xmm4"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395425,
+    "original": "660fe76a50",
+    "replacement": "660f7f6a50",
+    "instruction": "movntdq xmmword ptr [edx + 0x50], xmm5"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395430,
+    "original": "660fe77260",
+    "replacement": "660f7f7260",
+    "instruction": "movntdq xmmword ptr [edx + 0x60], xmm6"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395435,
+    "original": "660fe77a70",
+    "replacement": "660f7f7a70",
+    "instruction": "movntdq xmmword ptr [edx + 0x70], xmm7"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395481,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395485,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395490,
+    "original": "660fe75220",
+    "replacement": "660f7f5220",
+    "instruction": "movntdq xmmword ptr [edx + 0x20], xmm2"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395495,
+    "original": "660fe75a30",
+    "replacement": "660f7f5a30",
+    "instruction": "movntdq xmmword ptr [edx + 0x30], xmm3"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395523,
+    "original": "660fe702",
+    "replacement": "660f7f02",
+    "instruction": "movntdq xmmword ptr [edx], xmm0"
+  },
+  {
+    "module": "libc.so.6",
+    "address": 1395527,
+    "original": "660fe74a10",
+    "replacement": "660f7f4a10",
+    "instruction": "movntdq xmmword ptr [edx + 0x10], xmm1"
+  },
+  {
+    "module": "libNAT-1.2.so.0",
+    "address": 76416,
+    "original": "0fe707",
+    "replacement": "0f7f07",
+    "instruction": "movntq qword ptr [edi], mm0"
+  }
+]

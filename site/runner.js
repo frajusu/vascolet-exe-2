@@ -10,7 +10,15 @@
   fetchServerJitCache = callback => callback();
   const bootTime = performance.now();
   let rendering = false, ready = false, draws = 0, syncing = false, frames = 0, lastFrames = 0;
-  window.vascoletRuntimeStats = {frames:0, fps:0, started:performance.now()};
+  window.vascoletRuntimeStats = {frames:0, fps:0, started:performance.now(), frameTimes:[]};
+  function presented() {
+    frames++;
+    window.vascoletRuntimeStats.frames=frames;
+    const times=window.vascoletRuntimeStats.frameTimes;
+    times.push(performance.now());
+    if(times.length>6000)times.splice(0,times.length-6000);
+  }
+  Module.vascoletFrame=presented;
   let logQueue = [];
   document.getElementById('showConsole').checked = false;
   // Fetch the large independent archives concurrently, instead of serially.
@@ -42,9 +50,10 @@
   loadFile = (base, filename, callback) => archive(base+filename,filename).then(callback).catch(error=>send('error',{text:error.message}));
   const originalParams = getEmulatorParams;
   getEmulatorParams = () => {
-    const args=originalParams(); const index=args.indexOf('/bin/wine');
+    const args=originalParams();
+    const index=args.indexOf('/bin/wine');
     // No cmd / reg processes. The pinned Wine prefix already uses WineD3D WebGL.
-    args.splice(index,0,'-vsync','0','-env','WINEDEBUG=-all');
+    args.splice(index,0,'-vsync','0','-env','WINEDEBUG=-all','-env','ALSOFT_DRIVERS=winmm');
     const overrides=args.findIndex(arg=>String(arg).startsWith('WINEDLLOVERRIDES='));
     if(overrides>=0)args[overrides]+=';winemenubuilder.exe=d';
     return args;
@@ -67,12 +76,7 @@
   Module.setStatus = text => { if(text && !ready) send('progress',{text:'Preparando emulador…'}); };
   Module.onAbort = reason => send('error',{text:`El emulador se detuvo: ${reason}. Probá JIT de un hilo desde el menú.`});
   const present = Module.boxedwinePresentFrame;
-  Module.boxedwinePresentFrame = function(...args) { if(args[0])frames++; return present.apply(this,args); };
-  const drawImage = CanvasRenderingContext2D.prototype.drawImage;
-  CanvasRenderingContext2D.prototype.drawImage = function(...args) {
-    if(mode==='jit' && this.canvas.id==='boxedwine-webgl-canvas-0')frames++;
-    return drawImage.apply(this,args);
-  };
+  Module.boxedwinePresentFrame = function(...args) { if(args[0])presented(); return present.apply(this,args); };
   const nativeError=window.onerror;
   window.onerror = (message,...args) => {send('error',{text:String(message)}); if(nativeError)nativeError(message,...args);};
   window.addEventListener('unhandledrejection', event=>send('error',{text:String(event.reason?.message||event.reason)}));
@@ -85,16 +89,18 @@
       proto[name]=function(...args){draws++; return original.apply(this,args);};
     }
   }
-  let priorDraws=0, renderSeenAt=0;
+  let renderSeenAt=0, metricTime=performance.now();
   setInterval(() => {
     for(const text of logQueue.splice(0)) send('log',{text});
     if(rendering && (frames>0 || mode==='jit' && draws>0) && !renderSeenAt)renderSeenAt=performance.now();
     if(!ready && renderSeenAt && performance.now()-renderSeenAt>2000){ready=true;document.body.classList.add('game-ready');send('ready');}
     window.vascoletRuntimeStats.frames=frames;
-    window.vascoletRuntimeStats.fps=frames-lastFrames;
-    send('metrics',{text:`Motor: ${mode}\nAislamiento: ${crossOriginIsolated?'sí':'no'}\n${mode==='mt'?`Presentaciones / segundo: ${frames-lastFrames}`:`Dibujados GL / segundo: ${draws-priorDraws} (no son FPS)`}\nTiempo activo: ${Math.round((performance.now()-bootTime)/1000)} s`});
+    const now=performance.now();
+    window.vascoletRuntimeStats.fps=(frames-lastFrames)*1000/(now-metricTime);
+    const audio=Module.boxedwineAudio?.snapshot();
+    send('metrics',{text:`Motor: ${mode}\nAislamiento: ${crossOriginIsolated?'sí':'no'}\nPresentaciones / segundo: ${window.vascoletRuntimeStats.fps.toFixed(1)}\nAudio: ${audio?.state||'sin dispositivo activo'}\nTiempo activo: ${Math.round((now-bootTime)/1000)} s`});
+    metricTime=now;
     lastFrames=frames;
-    priorDraws=draws;
   },1000);
   // autoPersist handles individual writes. Explicit flushes cover navigation,
   // backups and idle periods, without scanning the FS on every rendered frame.
