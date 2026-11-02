@@ -32,15 +32,29 @@ def main():
     if dist.exists():
         shutil.rmtree(dist)
     shutil.copytree(ROOT / 'site', dist)
+    parts = sorted(dist.glob('game.zip.[0-9][0-9][0-9]'))
+    if parts:
+        with (dist / 'game.zip').open('wb') as output:
+            for part in parts:
+                with part.open('rb') as source:
+                    shutil.copyfileobj(source, output)
+                part.unlink()
     runtime = dist / 'runtime'
     runtime.mkdir()
     shutil.copyfile(wine, runtime / 'boxedwine.zip')
     with zipfile.ZipFile(build) as archive:
-        for mode, folder in [('jit', 'SingleThreadedJit'), ('st', 'SingleThreaded')]:
+        for mode, folder in [('jit', 'SingleThreadedJit'), ('mt', 'MultiThreadedJit')]:
             target = runtime / mode
             target.mkdir()
             for name in ['boxedwine.html', 'boxedwine-shell.js', 'boxedwine.js', 'boxedwine.wasm', 'boxedwine.css']:
                 (target / name).write_bytes(archive.read(f'Web/{folder}/{name}'))
+            html = (target / 'boxedwine.html').read_text(encoding='utf-8')
+            html = html.replace('</head>', '<link rel="stylesheet" href="../../runner.css"></head>')
+            marker = '<script src=boxedwine.js async>'
+            if marker not in html:
+                raise RuntimeError('Upstream runner changed: check integration before publishing')
+            html = html.replace(marker, '<script src="../../runner.js"></script>' + marker)
+            (target / 'boxedwine.html').write_text(html, encoding='utf-8')
             shutil.copyfile(ROOT / 'vendor' / 'fsfs.js', target / 'fsfs.js')
     print('Static site ready in', dist)
 

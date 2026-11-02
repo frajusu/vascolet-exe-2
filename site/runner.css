@@ -1,0 +1,1 @@
+html,body{background:#0a0a0c;color:#cfe3ff}#loading,#controls,#console,#app>hr{display:none!important}#app{position:fixed;inset:0}#dropzone{padding:0!important}div.emscripten_border{border:0;background:#000}canvas.emscripten{outline:none!important;image-rendering:auto}body:not(.game-ready) #dropzone{visibility:hidden}

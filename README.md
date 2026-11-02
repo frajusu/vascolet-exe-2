@@ -1,61 +1,66 @@
-# Vascolet 2 — EXE original en el navegador
+# Vascolet 2 — ejecutable original en el navegador
 
-[Abrir prueba](https://frajusu.github.io/vascolet-exe-2/)
+[Abrir juego](https://frajusu.github.io/vascolet-exe-2/)
 
-Experimento de ejecución del **vascolet2.exe original**, con sus recursos, mediante
-Boxedwine + Wine 11 en WebAssembly. No es una reconstrucción JavaScript del juego.
+El EXE original y sus recursos corren en Boxedwine + Wine 11 / WebAssembly.
+La pantalla está dedicada al juego, como los ports `-web`. Las opciones están
+en el botón ☰. Los botones 1–4 cambian de Vascolet.
 
-## Estado
+## Motores y carga
 
-Compatibilidad en evaluación. La publicación de la página y el arranque de Wine
-no certifican que el juego llegue al menú ni que sea jugable. Ver `TESTING.md`.
-Los cuatro ejecutables importan Direct3D 9 y DirectInput 8.
+- JIT multihilo con SharedArrayBuffer y OffscreenCanvas, por defecto cuando el
+  navegador permite aislamiento de origen. Un service worker agrega COOP/COEP
+  en GitHub Pages; requiere una recarga automática en la primera visita.
+- JIT de un hilo como alternativa y fallback si falla la inicialización del
+  multihilo. El menú permite seleccionar cualquiera.
+- Arranque directo del EXE, sin consola `cmd` ni procesos `reg` en cada inicio.
+- Wine y juego se descargan en paralelo y quedan en Cache Storage. La misma
+  descarga Wine se comparte entre los cuatro sitios en este origen.
+- Se conserva el entorno de Wine; no se destruye en cada reinicio.
 
-Se incluyen dos modos: single-thread JIT y single-thread intérprete, que no
-requieren cabeceras COOP/COEP. El botón de escritorio permite diagnosticar Wine.
-Se usa almacenamiento temporal para que cada prueba empiece limpia.
+La emulación sigue teniendo coste. No se promete arranque instantáneo ni 60 FPS.
+Ver [mediciones e investigación](docs/PERFORMANCE.md).
 
-## Desarrollo
+## Partidas
+
+Los archivos escritos por el juego se conservan mediante IDBFS / IndexedDB,
+con una clave distinta para cada Vascolet. `localStorage` guarda solamente las
+preferencias: motor y sonido. IndexedDB evita el límite pequeño de localStorage
+y permite guardar los archivos binarios originales.
+
+Se sincroniza al cambiar de juego, al reiniciar, al ocultar la pestaña y
+periódicamente. El menú permite exportar e importar una copia JSON de los
+archivos modificados de este entorno, no un estado instantáneo de la RAM.
+El juego debe guardar primero su propio progreso. Borrar los datos del sitio
+o usar otra sesión de navegador no conserva esas partidas.
+
+## Desarrollo y publicación
 
 ```sh
 python build.py
 python -m http.server 8000 --directory dist
 ```
 
-Abrir http://localhost:8000. Requiere Python 3.11+ e Internet para la primera
-compilación. Chrome/Edge 137+ o Firefox actualizado; JIT no está soportado por
-esta compilación de Boxedwine en Safari. La primera carga pesa unos
-126 MB.
+Python 3.11+, Internet para el primer build. Chrome/Edge o Firefox actualizado
+en PC. La primera visita carga aproximadamente 130–156 MB; las siguientes usan
+la caché local. El modo JIT de esta compilación no soporta Safari.
 
-GitHub Actions genera `dist/` y publica Pages. Los binarios de Wine y Boxedwine
-se descargan durante el build, se verifican por SHA-256 y se sirven desde Pages.
-Las URLs y hashes están en `runtime.lock.json`. La URL upstream de Wine contiene
-`latest`: si cambia, el build fallará por checksum y habrá que revisar y actualizar
-el pin explícitamente. No se acepta silenciosamente otro binario.
+Actions genera `dist/` y publica GitHub Pages. Las descargas se verifican con
+los hashes de `runtime.lock.json`. El pin Wine upstream contiene `latest`:
+si cambia, el build falla por checksum y requiere revisar el pin.
 
-## Archivos originales
+## Originales y licencias
 
-`site/game.zip` conserva los nombres y contenido de los archivos del juego.
-`game-manifest.json` registra su SHA-256 y los archivos excluidos: desinstaladores,
-copias de respaldo y, en Vascolet 3, una carpeta `libs` con un instalador VPN y
-sus archivos, ajenos al ejecutable del juego.
+`game-manifest.json` registra los SHA-256 originales y dependencias adicionales.
+No se modificaron los EXE. Se excluyeron desinstaladores y archivos ajenos;
+Vascolet 3 incluía una carpeta con un instalador VPN.
+Vascolet 1–3 requerían la OpenAL32.dll que se incluyó desde Vascolet 4.
+El paquete del juego 4 está dividido en `.001` / `.002` y se concatena al
+generar el sitio, sin alterar su contenido.
 
-## Motor y licencias
-
-Boxedwine build 121, fuente `26bf258ab0dc00aa1ec6da81d1ca263f922f8947`:
-https://github.com/danoon2/Boxedwine/tree/26bf258ab0dc00aa1ec6da81d1ca263f922f8947
-
-El soporte WebGL/Direct3D usado aquí es experimental y posterior a la versión
-estable 26R1. No usar el runtime estable como reemplazo: no soporta Direct3D web.
-Boxedwine: GPL-2.0-or-later, ver `vendor/Boxedwine-COPYING.txt` y encabezados.
-Wine y Tiny Core conservan sus propias licencias y avisos dentro de la imagen.
-No se incluye una imagen de Microsoft Windows.
-
-Vascolet y sus recursos pertenecen a sus autores originales. La licencia del
-emulador no cambia la licencia de los juegos.
-
-## Dependencia de audio añadida
-
-La carpeta original no contenía `OpenAL32.dll`, requerida por el EXE.
-Se añadió la copia OpenAL Soft incluida en Vascolet 4, registrada por SHA-256
-en `additionalDependencies` del manifiesto. El EXE y los recursos no se alteraron.
+Boxedwine build 121, fuente `26bf258ab0dc00aa1ec6da81d1ca263f922f8947`,
+GPL-2.0-or-later; ver `vendor/Boxedwine-COPYING.txt` y el
+[código fuente correspondiente](https://github.com/danoon2/Boxedwine/tree/26bf258ab0dc00aa1ec6da81d1ca263f922f8947).
+La capa de integración está en `site/runner.js`; se mantienen avisos de Wine y
+Tiny Core dentro de la imagen. No se distribuye Microsoft Windows.
+Vascolet y sus recursos pertenecen a sus autores originales.

@@ -3,31 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#176ab1">
-  <title>Vascolet · EXE en el navegador</title>
+  <meta name="theme-color" content="#0a0a0c">
+  <title>Vascolet</title>
   <link rel="stylesheet" href="style.css">
   <script src="launcher.js" defer></script>
 </head>
 <body>
-  <header><a class="brand" href="./">VASCOLET <span>archivo jugable</span></a><nav aria-label="Los cuatro juegos" id="games"></nav></header>
-  <main>
-    <section class="intro">
-      <div><p class="eyebrow">EL EJECUTABLE ORIGINAL / PRUEBA EXPERIMENTAL</p><h1>Vascolet <span id="number">…</span></h1><p class="lead">El mismo juego de PC. Ahora, una prueba para abrirlo desde el navegador.</p></div>
-      <div class="disc" aria-hidden="true"><span>.EXE</span></div>
-    </section>
-    <section class="player" id="player" aria-label="Emulador del juego">
-      <div class="toolbar"><span id="filename">Cargando configuración…</span><button id="fullscreen" type="button">Pantalla completa ↗</button></div>
-      <div class="screen" id="screen"><div class="welcome" id="welcome"><p class="screen-label">PC → WINE → NAVEGADOR</p><h2>Volvé a abrir la aventura.</h2><p>Elegí un modo y presioná Iniciar. La primera carga descarga Wine y los archivos del juego.</p><p id="download-size"></p><button id="start" class="primary" disabled type="button">Iniciar juego ▶</button></div><iframe id="emulator" title="Vascolet en Boxedwine" allow="autoplay; fullscreen; gamepad" hidden></iframe></div>
-      <p id="status" class="status" role="status">Preparando la prueba…</p>
-    </section>
-    <section class="settings" aria-label="Opciones de la prueba">
-      <label>Modo de ejecución<select id="engine"><option value="jit">Boxedwine + Wine 11 · JIT</option><option value="st">Boxedwine + Wine 11 · Intérprete</option></select></label>
-      <label>Sonido<select id="sound"><option value="true">Activado</option><option value="false">Desactivado</option></select></label>
-      <button id="restart" type="button" disabled>Reiniciar prueba ↻</button>
-      <button id="desktop" type="button">Abrir escritorio Wine</button>
-    </section>
-    <div class="notes"><section><h2>Para probar</h2><p>Usá Chrome, Edge o Firefox actualizado en una computadora. Hacé clic dentro del juego para darle el teclado y habilitar el audio.</p><p>Si se cierra o queda en negro, probá el intérprete o desactivá el sonido. La consola debajo de la pantalla del emulador muestra los errores.</p></section><section><h2>Estado: experimental</h2><p>Se ejecuta el <strong>.exe original</strong> con sus recursos. La compatibilidad y la velocidad todavía están en prueba; iniciar Wine no significa que el juego sea jugable.</p><p>Los cambios de esta sesión se descartan al reiniciar. La opción de escritorio sirve para comprobar Wine por separado.</p></section></div>
-    <footer><span>Vascolet y sus recursos pertenecen a sus autores originales.</span><a id="repo" href="https://github.com/frajusu">Código y registro de pruebas ↗</a><a href="https://github.com/danoon2/Boxedwine">Emulador: Boxedwine</a></footer>
-  </main>
+  <main id="stage"><iframe id="emulator" title="Vascolet original" allow="autoplay; fullscreen; gamepad; cross-origin-isolated" hidden></iframe></main>
+  <div id="boot" role="status"><div><p id="boot-text">Cargando…</p><progress id="progress" aria-label="Descarga del juego"></progress><button id="retry" hidden>Volver a intentar</button></div></div>
+  <nav id="games" aria-label="Cambiar de Vascolet"></nav>
+  <button id="menu-toggle" aria-label="Abrir menú" aria-controls="menu" aria-expanded="false">☰</button>
+  <aside id="menu" aria-label="Opciones" hidden>
+    <div class="menu-heading"><h1 id="title">Vascolet</h1><button id="close-menu" aria-label="Cerrar menú">×</button></div>
+    <p id="runtime-status" class="muted" role="status">Preparando…</p>
+    <label>Motor<select id="engine"><option value="auto">Automático · JIT multihilo</option><option value="mt">JIT multihilo</option><option value="jit">JIT de un hilo · compatibilidad</option></select></label>
+    <label class="check"><input id="sound" type="checkbox" checked> Sonido</label>
+    <button id="restart">Aplicar y reiniciar</button>
+    <button id="fullscreen">Pantalla completa</button>
+    <hr>
+    <h2>Partida</h2>
+    <p class="muted">Se conservan los archivos que guarda el juego en este navegador. Usá también el guardado del propio juego.</p>
+    <p id="save-status" class="muted" role="status">Guardado automático en IndexedDB.</p>
+    <div class="row"><button id="export-save">Exportar</button><button id="import-save">Importar</button></div>
+    <input id="save-file" type="file" accept="application/json,.json" hidden>
+    <hr>
+    <details id="diagnostics"><summary>Diagnóstico</summary><p id="metrics" class="muted"></p><pre id="log"></pre><button id="download-log">Descargar registro</button></details>
+    <a id="repo" class="muted" href="https://github.com/frajusu">Repositorio ↗</a>
+  </aside>
 </body>
 </html>
