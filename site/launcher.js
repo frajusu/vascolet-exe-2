@@ -54,7 +54,7 @@ function launch() {
   $('boot').hidden = false; $('boot-text').textContent = 'Cargando…'; $('progress').hidden = false; $('progress').removeAttribute('value'); $('retry').hidden = true;
   $('runtime-status').textContent = `${modeLabel()} · iniciando`;
   $('emulator').hidden = false;
-  $('emulator').src = currentMode==='aot'?`aot/index.html?run=${encodeURIComponent(currentRun)}&sound=${settings.sound}`:currentMode==='xo'?`cheerpx/index.html?run=${encodeURIComponent(currentRun)}&sound=${settings.sound}`:`runtime/${currentMode}/boxedwine.html?${params}`;
+  $('emulator').src = currentMode==='aot'?`aot/index.html?v=${encodeURIComponent(game.aotVersion)}&run=${encodeURIComponent(currentRun)}&sound=${settings.sound}`:currentMode==='xo'?`cheerpx/index.html?run=${encodeURIComponent(currentRun)}&sound=${settings.sound}`:`runtime/${currentMode}/boxedwine.html?${params}`;
   watchdog = setTimeout(() => failure('El arranque está tardando. Abrí el menú para ver el diagnóstico o cambiar de motor.'), 150000);
 }
 async function restart() { try { await flush(); remember(); menu(false); launch(); } catch {} }
@@ -98,7 +98,7 @@ $('download-log').onclick = () => download(new Blob([logs.join('\n')],{type:'tex
 document.addEventListener('visibilitychange', () => { if (document.hidden && ready) flush().catch(() => {}); });
 async function boot() {
   try {
-    const response = await fetch('game.json'); if (!response.ok) throw new Error(`Configuración: HTTP ${response.status}`);
+    const response = await fetch('game.json',{cache:'no-store'}); if (!response.ok) throw new Error(`Configuración: HTTP ${response.status}`);
     game = await response.json(); document.title = `Vascolet ${game.number}`; $('title').textContent = document.title; $('repo').href = `https://github.com/frajusu/vascolet-exe-${game.number}`;
     window.touchControls?.configure(game.number);
     settings = preference(`vascolet-exe-${game.number}-settings`, {engine:'auto',sound:true});

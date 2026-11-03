@@ -1,5 +1,5 @@
 'use strict';
-const CACHE = 'vascolet-exe-runtime-v5-aot2';
+const CACHE = 'vascolet-exe-runtime-v6-aot-versioned';
 self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
 function isolated(response) {
@@ -14,6 +14,9 @@ function isolated(response) {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if(url.pathname.includes('/aot/')||url.pathname.endsWith('/game.json')||url.pathname.endsWith('/launcher.js')){
+    event.respondWith(fetch(new Request(event.request,{cache:'no-store'})).then(isolated));return;
+  }
   const native=url.pathname.includes('/cheerpx/fs-');
   const requestedRange=event.request.headers.get('Range');
   if(requestedRange&&!native)return;

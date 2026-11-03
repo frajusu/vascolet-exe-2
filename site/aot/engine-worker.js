@@ -60,7 +60,7 @@ function host(){const video=renderer();let imageName='',image=null;
 onmessage=async({data})=>{
   if(data.type!=='start')return;control=new Int32Array(data.control);input=new Uint8Array(data.input);audio=new Int32Array(data.audio);sharedPixels=new Uint8Array(data.pixels);numberView=new DataView(data.control);
   try{
-    const base=data.base;importScripts(base+'worker-runtime.js');postMessage({type:'progress',text:'Cargando el módulo y los recursos originales…'});
+    const base=data.base;stats.runtimeBase=base;importScripts(base+'worker-runtime.js');postMessage({type:'progress',text:'Cargando el módulo y los recursos originales…'});
     mod=await createVascoletAOTWorker({locateFile:file=>base+file,aotHost:host(),print:line=>postMessage({type:'log',line}),printErr:line=>postMessage({type:'log',line})});
     for(const name of ['data','instance','tmp'])mod.FS.mkdirTree('/home/vascolet2/'+name);mod.FS.chdir('/game');
     if(data.save){let total=0;for(const file of data.save.files){const parts=file.path.split('/');if(parts[0]!=='vascolet2'||parts.length<2||parts.some(p=>!p||p==='.'||p==='..'||p.includes('\\')||p.includes('\0')))throw Error('Ruta de guardado no válida');const text=atob(file.data);total+=text.length;if(total>8*1024*1024)throw Error('Guardado demasiado grande');const raw=Uint8Array.from(text,c=>c.charCodeAt(0));const path='/home/'+file.path;mod.FS.mkdirTree(path.slice(0,path.lastIndexOf('/')));mod.FS.writeFile(path,raw);}}

@@ -50,7 +50,7 @@ start.onclick=async()=>{
   if(worker)return;if(!crossOriginIsolated||typeof SharedArrayBuffer==='undefined'){say('Abre la prueba desde el servidor local indicado, no como archivo.');return;}
   start.disabled=true;lines=[];lastReport=null;rawSounds.clear();durations.clear();backend.halt(-1);backend.finished.length=0;wire=createWire();const token=++serial;lastStats={};
   try{
-    const saved=importedSave||await VascoletSaveStore.load();if(importedSave)await VascoletSaveStore.put(importedSave);importedSave=null;void backend.resumeAudio().catch(log);worker=new Worker('./engine-worker.js');stop.disabled=false;document.getElementById('launch').hidden=true;document.getElementById('failure').hidden=true;canvas.focus();say('Preparando los recursos originales…');
+    const saved=importedSave||await VascoletSaveStore.load();if(importedSave)await VascoletSaveStore.put(importedSave);importedSave=null;void backend.resumeAudio().catch(log);worker=new Worker('./engine-worker.js'+(globalThis.VASCOLET_BUILD_ID?'?v='+encodeURIComponent(VASCOLET_BUILD_ID):''));stop.disabled=false;document.getElementById('launch').hidden=true;document.getElementById('failure').hidden=true;canvas.focus();say('Preparando los recursos originales…');
     worker.onmessage=({data})=>{
       if(token!==serial)return;
       if(data.type==='rpc'){void handleRPC(data,wire,token);return;}
@@ -72,7 +72,7 @@ start.onclick=async()=>{
     };
     worker.onerror=event=>{log(event.message);finish('Error del worker: '+event.message,true);};
     const base=new URL('../0_vascolets_web/recompiler-lab/game-2/runtime-stdlib/',location.href).href;
-    worker.postMessage({type:'start',base:globalThis.VASCOLET_EMBEDDED?new URL('./runtime/',location.href).href:base,control:wire.control,input:wire.input,audio:wire.audio,pixels:wire.pixels,save:saved});
+    worker.postMessage({type:'start',base:globalThis.VASCOLET_EMBEDDED?new URL(globalThis.VASCOLET_RUNTIME_BASE||'./runtime/',location.href).href:base,control:wire.control,input:wire.input,audio:wire.audio,pixels:wire.pixels,save:saved});
     if(!globalThis.VASCOLET_EMBEDDED)watchdog=setTimeout(()=>finish('Prueba detenida tras 20 minutos por seguridad.'),20*60*1000);
   }catch(error){log(error.stack||error);finish(String(error),true);}
 };
