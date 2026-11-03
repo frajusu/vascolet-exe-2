@@ -4,6 +4,16 @@ Hotfix: implement glibc `__ctype_get_mb_cur_max` for the supported C/POSIX
 locales (maximum one byte). Regression verifies global/thread locale and cdecl
 stack balance. This addresses the missing import reported on return to the menu.
 
+Follow-up save/return-to-menu fixes:
+- C/POSIX `wcsnrtombs`, `mbsnrtowcs`, `mbsrtowcs`, `wcsrtombs`, `mbrtowc`,
+  `wcrtomb`, with correct source-pointer updates, length-only calls and EILSEQ.
+- Guest file descriptors: open/read/write/writev/close, fdopen, lseek64 and
+  bounded i386 stat64 marshaling. Tests cover write/writev -> seek -> read and
+  guards around the 96-byte i386 stat64 buffer.
+- Content-addressed runtime directories and versioned JS/iframe URLs prevent
+  mixing an old cached module with newer browser code. No save databases cleared.
+- User reported the corrected local version working before this commit.
+
 The default engine is now the original Linux i386 game statically translated
 to WebAssembly, running synchronously in a dedicated worker. It does not use
 CheerpX, Wine, Boxedwine or full-module Asyncify. Original assets are preserved.
