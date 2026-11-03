@@ -2,13 +2,27 @@
 const canvas=document.getElementById('display');
 const context=canvas.getContext('2d',{alpha:false});
 window.bridgeStats={frames:0,frameTimes:[],audioStarts:0,audioErrors:[],nativeLog:''};
-let stream=new Uint8Array();
+let stream=new Uint8Array(131072),streamRead=0,streamEnd=0;
 let rgba;
 const colors=new Map();
 let audio;
 let meter;
 let master,readySent=false,inputWidth=0,inputHeight=0,yuvCanvas,yuvContext,yuvImage;
 const sounds=new Map(),channels=new Map();
+const soundCache=new Map();
+const SOUND_CACHE_LIMIT=32*1024*1024;
+let soundBytes=0;
+function trimSounds(){
+  const active=new Set([...channels.values()].map(record=>record.buffer));
+  for(const [url,entry] of soundCache){if(soundBytes<=SOUND_CACHE_LIMIT)break;if(!entry.buffer||active.has(entry.buffer))continue;soundBytes-=entry.bytes;soundCache.delete(url);}
+  bridgeStats.audioDecodedBytes=soundBytes;
+}
+function loadSound(url){
+  const cached=soundCache.get(url);if(cached){soundCache.delete(url);soundCache.set(url,cached);bridgeStats.audioCacheHits=(bridgeStats.audioCacheHits||0)+1;return cached.promise;}
+  const entry={buffer:null,bytes:0,promise:null};soundCache.set(url,entry);
+  entry.promise=fetch(url).then(response=>{if(!response.ok)throw Error(`${url}: ${response.status}`);return response.arrayBuffer();}).then(bytes=>audioContext().decodeAudioData(bytes)).then(buffer=>{entry.buffer=buffer;entry.bytes=buffer.length*buffer.numberOfChannels*4;soundBytes+=entry.bytes;bridgeStats.audioDecodedBytes=soundBytes;return buffer;}).catch(error=>{soundCache.delete(url);bridgeStats.audioErrors.push(error.message);return null;});
+  return entry.promise;
+}
 const textures=new Map();
 const nativeTextures=new Map();
 function nativeTexture(record,mode,color){
@@ -32,8 +46,8 @@ function audioContext(){if(!audio){audio=new AudioContext();meter=audio.createAn
 window.audioSnapshot=()=>{const pcm=new Float32Array(1024);meter?.getFloatTimeDomainData(pcm);return {state:audio?.state,starts:bridgeStats.audioStarts,rms:Math.sqrt(pcm.reduce((sum,x)=>sum+x*x,0)/pcm.length),errors:bridgeStats.audioErrors};};
 const generations=new Map();
 function ended(channel){if(window.nativeInput)for(const byte of new TextEncoder().encode(`A:${channel<0?65535:channel}:0\n`))window.nativeInput(byte);}
-function startSound(record){const a=audioContext(),node=a.createBufferSource();record.node=node;node.buffer=record.buffer;node.loop=record.loops<0;record.gain=a.createGain();record.gain.gain.value=record.volume/128;node.connect(record.gain).connect(meter);record.started=a.currentTime;node.onended=()=>{if(record.paused||record.node!==node||channels.get(record.channel)!==record)return;if(record.loops>0){record.loops--;record.offset=0;startSound(record);}else{channels.delete(record.channel);ended(record.channel);}};node.start(0,record.offset||0);bridgeStats.audioStarts++;}
-function stopSound(channel){generations.set(channel,(generations.get(channel)||0)+1);const record=channels.get(channel);channels.delete(channel);if(record?.node)try{record.node.stop();}catch{}}
+function startSound(record){const a=audioContext(),node=a.createBufferSource();record.node=node;node.buffer=record.buffer;node.loop=record.loops<0;record.gain?.disconnect();record.gain=a.createGain();record.gain.gain.value=record.volume/128;node.connect(record.gain).connect(meter);record.started=a.currentTime;node.onended=()=>{node.disconnect();if(record.paused||record.node!==node||channels.get(record.channel)!==record)return;if(record.loops>0){record.loops--;record.offset=0;startSound(record);}else{record.gain.disconnect();channels.delete(record.channel);ended(record.channel);trimSounds();}};node.start(0,record.offset||0);bridgeStats.audioStarts++;}
+function stopSound(channel){generations.set(channel,(generations.get(channel)||0)+1);const record=channels.get(channel);channels.delete(channel);if(record?.node)try{record.node.stop();record.node.disconnect();record.gain.disconnect();}catch{}}
 function packet(kind,data) {
   const view=new DataView(data.buffer,data.byteOffset,data.byteLength);
   if(kind===1) {
@@ -58,7 +72,7 @@ function packet(kind,data) {
     for(let y=0;y<h;y++)for(let x=0;x<w;x++){const at=y*pitch+x*bpp,pixel=bpp===2?raw.getUint16(at,true):bpp===4?raw.getUint32(at,true):raw.getUint8(at)|raw.getUint8(at+1)<<8|raw.getUint8(at+2)<<16,base=(y*w+x)*4;for(let c=0;c<3;c++)image.data[base+c]=max[c]?((pixel&masks[c])>>>shifts[c])*255/max[c]:0;image.data[base+3]=pixelAlpha?((pixel&masks[3])>>>shifts[3])*255/max[3]:(flags&0x1000)&&(pixel&rgbMask)===(key&rgbMask)?0:255;}
     const texture=document.createElement('canvas');texture.width=w;texture.height=h;texture.getContext('2d').putImageData(image,0,0);textures.set(id,texture);
   }
-  if(kind===6){const values=Array.from({length:8},(_,n)=>view.getInt32(n*4,true)),texture=textures.get(values[0]>>>0);if(texture){context.globalAlpha=values[7]/255;context.drawImage(texture,values[1],values[2],values[3],values[4],values[5],values[6],values[3],values[4]);context.globalAlpha=1;}}
+  if(kind===6){const texture=textures.get(view.getUint32(0,true));if(texture){const w=view.getInt32(12,true),h=view.getInt32(16,true);context.globalAlpha=view.getInt32(28,true)/255;context.drawImage(texture,view.getInt32(4,true),view.getInt32(8,true),w,h,view.getInt32(20,true),view.getInt32(24,true),w,h);context.globalAlpha=1;}}
   if(kind===7){const values=Array.from({length:8},(_,n)=>view.getUint32(n*4,true));size(values[6],values[7]);const color=values[4];context.fillStyle=values[5]===16?`rgb(${(color>>11)*255/31},${(color>>5&63)*255/63},${(color&31)*255/31})`:`rgb(${color>>16&255},${color>>8&255},${color&255})`;context.fillRect(values[0],values[1],values[2],values[3]);}
   if(kind===8)textures.delete(view.getUint32(0,true));
   if(kind===18){inputWidth=view.getUint32(0,true);inputHeight=view.getUint32(4,true);}
@@ -74,8 +88,8 @@ function packet(kind,data) {
     }
     yuvContext.putImageData(yuvImage,0,0);size(inputWidth||dw||w,inputHeight||dh||h);context.drawImage(yuvCanvas,dx,dy,dw||canvas.width,dh||canvas.height);frame(true);
   }
-  if(kind===10){const id=view.getUint32(0,true),path=new TextDecoder().decode(data.subarray(4)).replace(/\0.*$/s,'');const root=window.assetBase||new URL('files/',location.href);sounds.set(id,fetch(new URL('game/'+path.replace(/^\/game\//,'').replace(/\/{2,}/g,'/'),root)).then(r=>{if(!r.ok)throw Error(`${path}: ${r.status}`);return r.arrayBuffer();}).then(b=>audioContext().decodeAudioData(b)).catch(e=>{bridgeStats.audioErrors.push(e.message);return null;}));}
-  if(kind===11){const id=view.getUint32(0,true),channel=view.getInt32(4,true),loops=view.getInt32(8,true),volume=view.getInt32(12,true);stopSound(channel);const generation=generations.get(channel);Promise.resolve(sounds.get(id)).then(buffer=>{if(!buffer||generation!==generations.get(channel))return;const record={channel,buffer,loops,volume,offset:0,paused:false};channels.set(channel,record);startSound(record);});}
+  if(kind===10){const id=view.getUint32(0,true),path=new TextDecoder().decode(data.subarray(4)).replace(/\0.*$/s,'');const root=window.assetBase||new URL('files/',location.href);sounds.set(id,new URL('game/'+path.replace(/^\/game\//,'').replace(/\/{2,}/g,'/'),root).href);}
+  if(kind===11){const id=view.getUint32(0,true),channel=view.getInt32(4,true),loops=view.getInt32(8,true),volume=view.getInt32(12,true);stopSound(channel);const generation=generations.get(channel),url=sounds.get(id);(url?loadSound(url):Promise.resolve(null)).then(buffer=>{if(generation!==generations.get(channel))return;if(!buffer){ended(channel);return;}const record={channel,buffer,loops,volume,offset:0,paused:false};channels.set(channel,record);startSound(record);trimSounds();});}
   if(kind===12){const channel=view.getInt32(0,true);if(channel===-1){for(const key of [...channels.keys()])if(key>=0)stopSound(key);}else stopSound(channel);}
   if(kind===13){for(const key of [...channels.keys()])stopSound(key);}
   if(kind===14){const channel=view.getInt32(0,true),pause=!!view.getInt32(4,true);for(const record of channels.values()){if(record.channel!==channel&&!(channel===-1&&record.channel>=0))continue;if(pause&&!record.paused){record.paused=true;record.offset=(record.offset+audio.currentTime-record.started)%record.buffer.duration;try{record.node.stop();}catch{}}else if(!pause&&record.paused){record.paused=false;startSound(record);}}}
@@ -98,8 +112,11 @@ function packet(kind,data) {
   if(kind===36){size(view.getUint32(0,true),view.getUint32(4,true));bridgeStats.renderer='browser';}
 }
 window.consumeSDL=bytes=>{
-  const joined=new Uint8Array(stream.length+bytes.length);joined.set(stream);joined.set(bytes,stream.length);stream=joined;
-  while(stream.length>=12){const v=new DataView(stream.buffer,stream.byteOffset,stream.byteLength);if(v.getUint32(0,true)!==0x4c445356){bridgeStats.nativeLog=(bridgeStats.nativeLog+String.fromCharCode(stream[0])).slice(-8000);stream=stream.subarray(1);continue;}const kind=v.getUint32(4,true),size=v.getUint32(8,true);if(size>20*1024*1024){stream=stream.subarray(4);continue;}if(stream.length<12+size)return;packet(kind,stream.subarray(12,12+size));stream=stream.subarray(12+size);}
+  const pending=streamEnd-streamRead;
+  if(streamEnd+bytes.length>stream.length){if(pending+bytes.length<=stream.length){stream.copyWithin(0,streamRead,streamEnd);}else{let capacity=stream.length;while(capacity<pending+bytes.length)capacity*=2;const next=new Uint8Array(capacity);next.set(stream.subarray(streamRead,streamEnd));stream=next;bridgeStats.transportAllocations=(bridgeStats.transportAllocations||0)+1;}streamRead=0;streamEnd=pending;}
+  stream.set(bytes,streamEnd);streamEnd+=bytes.length;
+  while(streamEnd-streamRead>=12){const v=new DataView(stream.buffer,streamRead,streamEnd-streamRead);if(v.getUint32(0,true)!==0x4c445356){bridgeStats.nativeLog=(bridgeStats.nativeLog+String.fromCharCode(stream[streamRead++])).slice(-8000);continue;}const kind=v.getUint32(4,true),size=v.getUint32(8,true);if(size>20*1024*1024){streamRead+=4;continue;}if(streamEnd-streamRead<12+size)return;packet(kind,stream.subarray(streamRead+12,streamRead+12+size));streamRead+=12+size;}
+  if(streamRead===streamEnd)streamRead=streamEnd=0;
 };
 const state=new Uint8Array(332);
 function inputPacket(bytes){if(!window.nativeInput)return;const line=bytes[0]===0xc1?`K:${bytes[1]|bytes[2]<<8}:${bytes[3]}\n`:`M:${bytes[1]|bytes[2]<<8}:${bytes[3]|bytes[4]<<8}:${bytes[5]}\n`;for(const byte of new TextEncoder().encode(line))window.nativeInput(byte);}

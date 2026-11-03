@@ -31,3 +31,19 @@ juego lo escriba.
 Para recompilar los adaptadores: configurar `ZIG` con Zig 0.13.0 y ejecutar
 `python native/cheerpx/rebuild.py`. `python build.py` prepara el sitio con los
 binarios ya incluidos. El runtime CheerpX se carga desde su CDN oficial.
+
+## Investigación siguiente y mejoras de memoria
+
+El puente compartido usa carga de audio bajo demanda, reutilización de buffers
+por URL, expulsión de buffers inactivos por presupuesto y liberación de canales
+si falla la descarga. El transporte gráfico reutiliza memoria en vez de copiar
+todo el paquete pendiente al recibir cada fragmento.
+
+Una nueva ruta de 10,54 s con movimiento dio 46,21 FPS, mediana de 20,04 ms y
+p95 de 30,67 ms; no es garantía de 60 FPS ni una medición en teléfono.
+
+Se investiga recompilación estática ELF → C → WebAssembly, por separado del
+motor publicado. Una prueba con dos funciones originales del XO3 pasó 131.072
+casos en Chromium sin CheerpX/Wine. **No existe todavía un juego completo AOT**:
+la cobertura de traducción no resuelve las bibliotecas, llamadas indirectas,
+excepciones ni la compatibilidad de partidas por sí sola.
