@@ -6,7 +6,7 @@
   let number=0,enabled=false;
   const profiles={
     1:[[' ','Saltar','Espacio','primary']],
-    2:[['x','Disparar','X',''],['z','Saltar','Z','primary']],
+    2:[['x','Disparar','X',''],['s','Salto largo','S',''],['z','Saltar','Z','primary']],
     3:[['z','Turbo','Z',''],['x','Misil','X',''],[' ','Saltar','Espacio','primary wide']],
     4:[['x','Disparar','X',''],['z','Saltar','Z','primary']]
   };

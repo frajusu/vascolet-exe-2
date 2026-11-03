@@ -28,7 +28,7 @@
   <aside id="menu" aria-label="Opciones" hidden>
     <div class="menu-heading"><h1 id="title">Vascolet</h1><button id="close-menu" aria-label="Cerrar menú">×</button></div>
     <p id="runtime-status" class="muted" role="status">Preparando…</p>
-    <label>Motor<select id="engine"><option value="auto">Automático</option><option value="xo" id="xo-option" hidden>XO · CheerpX (experimental)</option><option value="mt">JIT multihilo</option><option value="jit">JIT de un hilo · compatibilidad</option></select></label>
+    <label>Motor<select id="engine"><option value="auto">Automático · recompilado</option><option value="aot">XO original · WebAssembly</option><option value="xo" id="xo-option" hidden>XO · CheerpX anterior</option><option value="mt">JIT multihilo</option><option value="jit">JIT de un hilo · compatibilidad</option></select></label>
     <label class="check"><input id="sound" type="checkbox" checked> Sonido</label>
     <label class="check"><input id="touch-enabled" type="checkbox"> Controles táctiles</label>
     <p id="touch-hint" class="muted" hidden>Podés mantener una dirección y una acción a la vez. Tocá directamente el juego para usar sus menús.</p>
@@ -36,7 +36,7 @@
     <button id="fullscreen">Pantalla completa</button>
     <hr>
     <h2>Partida</h2>
-    <p class="muted">Se conservan los archivos que guarda el juego en este navegador. Usá también el guardado del propio juego. XO y Windows guardan sus partidas por separado.</p>
+    <p class="muted">Se conservan automáticamente los archivos que guarda el juego en este navegador. Usá también el guardado del propio juego. Las partidas de la versión anterior siguen intactas: podés exportarlas desde ese motor e importarlas aquí. Los guardados de Windows son separados.</p>
     <p id="save-status" class="muted" role="status">Guardado automático en IndexedDB.</p>
     <div class="row"><button id="export-save">Exportar</button><button id="import-save">Importar</button></div>
     <input id="save-file" type="file" accept="application/json,.json" hidden>
