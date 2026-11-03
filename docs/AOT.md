@@ -1,5 +1,9 @@
 # Vascolet 2: original XO executable recompiled to WebAssembly
 
+Hotfix: implement glibc `__ctype_get_mb_cur_max` for the supported C/POSIX
+locales (maximum one byte). Regression verifies global/thread locale and cdecl
+stack balance. This addresses the missing import reported on return to the menu.
+
 The default engine is now the original Linux i386 game statically translated
 to WebAssembly, running synchronously in a dedicated worker. It does not use
 CheerpX, Wine, Boxedwine or full-module Asyncify. Original assets are preserved.
