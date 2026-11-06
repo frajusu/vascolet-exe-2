@@ -2,14 +2,14 @@
 const P=VascoletWire,canvas=document.getElementById('game'),context=canvas.getContext('2d',{alpha:false});
 const status=document.getElementById('status'),start=document.getElementById('start'),stop=document.getElementById('stop'),logBox=document.getElementById('log');
 const backend=createAOTBrowserHost(canvas),rawSounds=new Map(),durations=new Map(),pendingAudio=new Map();
-let worker=null,wire=null,serial=0,importedSave=null,watchdog=null,lastStats={},lastReport=null,lines=[];
+let worker=null,wire=null,serial=0,importedSave=null,watchdog=null,lastStats={},lastReport=null,lines=[],frameImage=null;
 const saveWaiters=new Map();
 function requestSave(){if(!worker)return Promise.reject(Error('El juego no está iniciado.'));const request=Atomics.add(wire.c,P.SAVE_REQUEST,1)+1;return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{saveWaiters.delete(request);reject(Error('El guardado tardó demasiado.'));},15000);saveWaiters.set(request,{resolve,reject,timer});});}
 function settleSave(request,save,error){for(const [id,item] of saveWaiters)if(id<=request){clearTimeout(item.timer);saveWaiters.delete(id);error?item.reject(error):item.resolve(save);}}
 const say=text=>{status.textContent=text;dispatchEvent(new CustomEvent('vascolet-status',{detail:text}));};
 function log(text){lines.push(String(text));if(lines.length>120)lines.shift();logBox.textContent=lines.join('\n');dispatchEvent(new CustomEvent('vascolet-log',{detail:String(text)}));}
 function normalize(path){const parts=[];for(const p of path.split('/')){if(!p||p==='.')continue;if(p==='..')parts.pop();else parts.push(p);}if(parts[0]==='game')parts.shift();return parts.join('/');}
-function createWire(){const control=new SharedArrayBuffer(128),input=new SharedArrayBuffer(P.QUEUE*20),audio=new SharedArrayBuffer(P.QUEUE*4),pixels=new SharedArrayBuffer(P.PIXEL_BYTES);return {control,input,audio,pixels,c:new Int32Array(control),events:new Uint8Array(input),ended:new Int32Array(audio),bytes:new Uint8Array(pixels),number:new DataView(control)};}
+function createWire(){const control=new SharedArrayBuffer(128),input=new SharedArrayBuffer(P.QUEUE*20),audio=new SharedArrayBuffer(P.QUEUE*4),pixels=new SharedArrayBuffer(P.PIXEL_BYTES),frame=new SharedArrayBuffer(P.PIXEL_BYTES);return {control,input,audio,pixels,frame,c:new Int32Array(control),events:new Uint8Array(input),ended:new Int32Array(audio),bytes:new Uint8Array(pixels),framePixels:new Uint8Array(frame),number:new DataView(control)};}
 backend.events.push=function(event){
   if(!worker||!wire)return 0;const w=wire,c=w.c,read=Atomics.load(c,P.INPUT_READ),write=Atomics.load(c,P.INPUT_WRITE);
   const view=new DataView(event.buffer,event.byteOffset,event.byteLength);if([4,5,6].includes(event[0])){Atomics.store(c,P.MOUSE_XY,view.getUint16(4,true)|(view.getUint16(6,true)<<16));let buttons=Atomics.load(c,P.MOUSE_BUTTONS);if(event[0]===4)buttons=event[2];else{const mask=1<<(event[2]-1);buttons=event[3]?buttons|mask:buttons&~mask;}Atomics.store(c,P.MOUSE_BUTTONS,buttons);}
@@ -58,8 +58,19 @@ start.onclick=async()=>{
       if(data.type==='resize'){backend.resize(data.w,data.h);return;}
       if(data.type==='caption'){canvas.setAttribute('aria-label',data.text);return;}
       if(data.type==='frame'){
-        try{if(canvas.width!==data.bitmap.width||canvas.height!==data.bitmap.height)backend.resize(data.bitmap.width,data.bitmap.height);context.drawImage(data.bitmap,0,0);lastStats=data.stats;if(data.id===1)dispatchEvent(new CustomEvent('vascolet-ready'));say('Juego en pantalla · clic para enfocar · Enter para continuar');}
-        finally{data.bitmap.close();Atomics.store(wire.c,P.FRAME_ACK,data.id);Atomics.notify(wire.c,P.FRAME_ACK);}return;
+        try{
+          if(data.bitmap){ /* legacy worker: per-frame ImageBitmap */
+            if(canvas.width!==data.bitmap.width||canvas.height!==data.bitmap.height)backend.resize(data.bitmap.width,data.bitmap.height);
+            context.drawImage(data.bitmap,0,0);
+          }else{
+            if(canvas.width!==data.w||canvas.height!==data.h)backend.resize(data.w,data.h);
+            if(!frameImage||frameImage.width!==data.w||frameImage.height!==data.h)frameImage=context.createImageData(data.w,data.h);
+            frameImage.data.set(wire.framePixels.subarray(0,data.w*data.h*4));
+            context.putImageData(frameImage,0,0);
+          }
+          lastStats=data.stats;if(data.id===1)dispatchEvent(new CustomEvent('vascolet-ready'));say('Juego en pantalla · clic para enfocar · Enter para continuar');
+        }
+        finally{if(data.bitmap)data.bitmap.close();Atomics.store(wire.c,P.FRAME_ACK,data.id);Atomics.notify(wire.c,P.FRAME_ACK);}return;
       }
       if(data.type==='progress'){say(data.text);return;}
       if(data.type==='log'){log(data.line);try{const item=JSON.parse(data.line);if(item.game)lastReport=item;}catch{}return;}
@@ -72,7 +83,7 @@ start.onclick=async()=>{
     };
     worker.onerror=event=>{log(event.message);finish('Error del worker: '+event.message,true);};
     const base=new URL('../0_vascolets_web/recompiler-lab/game-2/runtime-stdlib/',location.href).href;
-    worker.postMessage({type:'start',base:globalThis.VASCOLET_EMBEDDED?new URL(globalThis.VASCOLET_RUNTIME_BASE||'./runtime/',location.href).href:base,control:wire.control,input:wire.input,audio:wire.audio,pixels:wire.pixels,save:saved});
+    worker.postMessage({type:'start',base:globalThis.VASCOLET_EMBEDDED?new URL(globalThis.VASCOLET_RUNTIME_BASE||'./runtime/',location.href).href:base,control:wire.control,input:wire.input,audio:wire.audio,pixels:wire.pixels,frame:wire.frame,save:saved});
     if(!globalThis.VASCOLET_EMBEDDED)watchdog=setTimeout(()=>finish('Prueba detenida tras 20 minutos por seguridad.'),20*60*1000);
   }catch(error){log(error.stack||error);finish(String(error),true);}
 };

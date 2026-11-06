@@ -1,7 +1,7 @@
 /* Original synchronous AOT code runs off the UI thread. No Asyncify pass. */
 importScripts('./protocol.js');
 const P=VascoletWire;
-let control,input,audio,sharedPixels,numberView,mod,rpcID=0,frameID=0;
+let control,input,audio,sharedPixels,framePixels,numberView,mod,rpcID=0,frameID=0;
 const decoder=new TextDecoder();
 const stats={frames:0,images:0,imageBytesCopied:0,events:0,wasmBytes:0,lastTitle:''};
 function stopped(){return Atomics.load(control,P.STOP)!==0;}
@@ -46,7 +46,17 @@ function renderer(){
       else if(kind===3){const p=ptr+y*pitch+x*4;out[at]=heap[p];out[at+1]=heap[p+1];out[at+2]=heap[p+2];}else throw Error('Formato de pantalla no soportado');out[at+3]=255;
     }
     ctx.putImageData(image,0,0);context.drawImage(source,0,0,dw,dh);stats.frames++;stats.wasmBytes=heap.buffer.byteLength;
-    const id=++frameID,bitmap=canvas.transferToImageBitmap();postMessage({type:'frame',id,bitmap,stats:{...stats}},[bitmap]);waitFor(P.FRAME_ACK,id,20);mod._renew_entry_budget();
+    const id=++frameID;
+    if(framePixels){
+      /* Raw RGBA via shared memory: a per-frame ImageBitmap leaked one GPU texture per frame in Opera's GPU process. */
+      const width=canvas.width,height=canvas.height,bytes=width*height*4;
+      if(bytes>framePixels.length)throw Error('El frame supera el límite de memoria compartida');
+      framePixels.set(context.getImageData(0,0,width,height).data);
+      postMessage({type:'frame',id,w:width,h:height,stats:{...stats}});
+    }else{
+      const bitmap=canvas.transferToImageBitmap();postMessage({type:'frame',id,bitmap,stats:{...stats}},[bitmap]);
+    }
+    waitFor(P.FRAME_ACK,id,20);mod._renew_entry_budget();
   }};
 }
 function host(){const video=renderer();let imageName='',image=null;
@@ -58,7 +68,7 @@ function host(){const video=renderer();let imageName='',image=null;
   };
 }
 onmessage=async({data})=>{
-  if(data.type!=='start')return;control=new Int32Array(data.control);input=new Uint8Array(data.input);audio=new Int32Array(data.audio);sharedPixels=new Uint8Array(data.pixels);numberView=new DataView(data.control);
+  if(data.type!=='start')return;control=new Int32Array(data.control);input=new Uint8Array(data.input);audio=new Int32Array(data.audio);sharedPixels=new Uint8Array(data.pixels);framePixels=data.frame?new Uint8Array(data.frame):null;numberView=new DataView(data.control);
   try{
     const base=data.base;stats.runtimeBase=base;importScripts(base+'worker-runtime.js');postMessage({type:'progress',text:'Cargando el módulo y los recursos originales…'});
     mod=await createVascoletAOTWorker({locateFile:file=>base+file,aotHost:host(),print:line=>postMessage({type:'log',line}),printErr:line=>postMessage({type:'log',line})});
