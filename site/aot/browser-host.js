@@ -32,9 +32,17 @@ window.createAOTBrowserHost = (canvas, {frameLimit=3}={}) => {
   function coordinates(e){const r=canvas.getBoundingClientRect();return {x:Math.max(0,Math.min(canvas.width-1,Math.floor((e.clientX-r.left)*canvas.width/r.width))),y:Math.max(0,Math.min(canvas.height-1,Math.floor((e.clientY-r.top)*canvas.height/r.height)))};}
   function pointer(e,button){const p=coordinates(e),bytes=new Uint8Array(20),v=new DataView(bytes.buffer);if(button){bytes[0]=e.type==='pointerdown'?5:6;bytes[2]=e.button===2?3:e.button===1?2:1;bytes[3]=e.type==='pointerdown'?1:0;const mask=1<<(bytes[2]-1);mouse.buttons=bytes[3]?mouse.buttons|mask:mouse.buttons&~mask;}else{bytes[0]=4;bytes[2]=mouse.buttons;v.setInt16(8,p.x-mouse.x,true);v.setInt16(10,p.y-mouse.y,true);}v.setUint16(4,p.x,true);v.setUint16(6,p.y,true);Object.assign(mouse,p);enqueue(bytes);}
   canvas.tabIndex=0;
-  const onKey=e=>{const code=keys[e.code]??(e.key.length===1?e.key.toLowerCase().charCodeAt(0):undefined);if(code!==undefined){e.preventDefault();key(code,e.type==='keydown');}};
+  const onKey=e=>{
+    const target=e.target;
+    if(target&&target!==canvas&&target.closest&&target.closest('button,input,textarea,select,a,[contenteditable]'))return;
+    let physical=e.code,expected=e.key;
+    const mapped=globalThis.VascoletControls?VascoletControls.translate(physical):null;
+    if(mapped){if(mapped.block){e.preventDefault();return;}physical=mapped.code;expected=mapped.key;}
+    const code=keys[physical]??(expected.length===1?expected.toLowerCase().charCodeAt(0):undefined);
+    if(code!==undefined){e.preventDefault();key(code,e.type==='keydown');}
+  };
   const release=()=>{for(const code of [...held])key(code,false);for(let button=1;button<=5;button++)if(mouse.buttons&(1<<(button-1))){const e=new Uint8Array(20),v=new DataView(e.buffer);e[0]=6;e[2]=button;v.setUint16(4,mouse.x,true);v.setUint16(6,mouse.y,true);enqueue(e);}mouse.buttons=0;};
-  canvas.addEventListener('keydown',onKey);canvas.addEventListener('keyup',onKey);
+  window.addEventListener('keydown',onKey);window.addEventListener('keyup',onKey);
   canvas.addEventListener('blur',release);
   window.addEventListener('blur',release);
   canvas.addEventListener('pointerdown',e=>{canvas.focus();canvas.setPointerCapture(e.pointerId);pointer(e,true);audio?.resume();});

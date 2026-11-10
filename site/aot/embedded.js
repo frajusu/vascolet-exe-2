@@ -12,7 +12,7 @@ addEventListener('vascolet-failure',event=>embedSend('error',{text:event.detail}
 addEventListener('message',async event=>{
   if(event.origin!==location.origin||event.source!==parent||event.data?.channel!=='vascolet-command')return;
   const {id,action}=event.data;
-  try{let data;if(action==='sync')await vascoletAOT.sync();else if(action==='export')data=await vascoletAOT.export();else throw Error('Acción desconocida.');embedSend('reply',{id,data});}
+  try{let data;if(action==='sync')await vascoletAOT.sync();else if(action==='export')data=await vascoletAOT.export();else if(action==='controls'){globalThis.VascoletControls?.reload();}else throw Error('Acción desconocida.');embedSend('reply',{id,data});}
   catch(error){embedSend('reply',{id,error:error.message});}
 });
 /* memoria total de pestaña: muestreada por el padre (launcher.js) */

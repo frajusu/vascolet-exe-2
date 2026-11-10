@@ -77,6 +77,86 @@ window.addEventListener('message', event => {
 $('menu-toggle').onclick = () => menu($('menu').hidden);
 $('close-menu').onclick = () => menu(false);
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('menu').hidden) menu(false); });
+/* Controles reasignables: la página traduce, el juego siempre ve la tecla original. */
+let capturing = null;
+function refocus() {
+  const frame = $('emulator');
+  if (!ready || !$('menu').hidden || !frame || frame.hidden) return;
+  try { frame.focus({preventScroll: true}); } catch { try { frame.focus(); } catch {} }
+}
+window.vascoletRefocus = refocus;
+function forwardKey(event) {
+  const frame = $('emulator'), win = frame && frame.contentWindow;
+  if (!win || !ready) return;
+  try {
+    win.dispatchEvent(new win.KeyboardEvent(event.type, {key:event.key, code:event.code, repeat:event.repeat, ctrlKey:event.ctrlKey, shiftKey:event.shiftKey, altKey:event.altKey, metaKey:event.metaKey, bubbles:true, cancelable:true}));
+  } catch {}
+}
+function renderKeybinds() {
+  const box = $('keybinds');
+  if (!box || !window.VascoletControls) return;
+  box.replaceChildren();
+  for (const item of VascoletControls.actions()) {
+    const row = document.createElement('div'); row.className = 'keybind';
+    const name = document.createElement('span'); name.textContent = item.label;
+    const button = document.createElement('button'); button.type = 'button'; button.dataset.action = item.id;
+    button.textContent = VascoletControls.label(item.bound);
+    if (item.changed) button.classList.add('changed');
+    row.append(name, button); box.append(row);
+  }
+}
+function endCapture() {
+  if (!capturing) return;
+  const old = capturing.button; capturing = null;
+  old.classList.remove('listening'); renderKeybinds();
+}
+function applyBinding(id, code) {
+  if (!window.VascoletControls) return;
+  VascoletControls.set(id, code);
+  endCapture();
+  if (ready) request('controls').catch(() => {});
+}
+$('keybind-reset').onclick = () => {
+  if (!window.VascoletControls) return;
+  endCapture(); VascoletControls.reset();
+  if (ready) request('controls').catch(() => {});
+};
+$('keybinds').addEventListener('click', event => {
+  const button = event.target.closest('button[data-action]');
+  if (!button || !window.VascoletControls) return;
+  if (capturing && capturing.button === button) { endCapture(); return; }
+  endCapture();
+  capturing = {id:button.dataset.action, button};
+  button.classList.add('listening'); button.textContent = 'Pulsa una tecla…'; button.focus();
+});
+window.VascoletControls?.onChange(() => renderKeybinds());
+function guardParentKey(event) {
+  if (!$('menu').hidden || !ready || !event.code || document.activeElement === $('emulator')) return false;
+  const target = event.target;
+  if (target && target.closest && target.closest('input,textarea,select,summary,[contenteditable]')) return false;
+  if (target && target.closest && target.closest('button,a') && ['Enter',' ','Tab'].includes(event.key)) return false;
+  event.preventDefault(); forwardKey(event);
+  return true;
+}
+document.addEventListener('keydown', event => {
+  if (capturing) {
+    event.preventDefault(); event.stopPropagation();
+    if (event.key === 'Escape') endCapture();
+    else if (event.code) applyBinding(capturing.id, event.code);
+    return;
+  }
+  if (guardParentKey(event)) refocus();
+}, true);
+document.addEventListener('keyup', event => {
+  if (capturing) { event.preventDefault(); event.stopPropagation(); return; }
+  guardParentKey(event);
+}, true);
+document.addEventListener('pointerdown', event => {
+  if (event.target.closest && event.target.closest('#menu,#boot')) return;
+  refocus();
+}, true);
+window.addEventListener('focus', () => setTimeout(refocus, 0));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(refocus, 0); });
 $('restart').onclick = restart;
 $('retry').onclick = restart;
 $('fullscreen').onclick = async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); menu(false); } catch (error) { note(error.message); } };
@@ -101,6 +181,7 @@ async function boot() {
     const response = await fetch('game.json',{cache:'no-store'}); if (!response.ok) throw new Error(`Configuración: HTTP ${response.status}`);
     game = await response.json(); document.title = `Vascolet ${game.number}`; $('title').textContent = document.title; $('repo').href = `https://github.com/frajusu/vascolet-exe-${game.number}`;
     window.touchControls?.configure(game.number);
+    renderKeybinds();
     settings = preference(`vascolet-exe-${game.number}-settings`, {engine:'auto',sound:true});
     if (!['auto','aot','mt','jit','xo'].includes(settings.engine)||settings.engine==='xo'&&!game.xoEngine) settings.engine = 'auto';
     $('xo-option').hidden=!game.xoEngine;

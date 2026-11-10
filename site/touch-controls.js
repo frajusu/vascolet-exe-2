@@ -5,11 +5,12 @@
   const pointers=new Map(),pressed=new Set(),timers=new Set();
   let number=0,enabled=false;
   const profiles={
-    1:[[' ','Saltar','Espacio','primary']],
-    2:[['x','Disparar','X',''],['s','Salto largo','S',''],['z','Saltar','Z','primary']],
-    3:[['z','Turbo','Z',''],['x','Misil','X',''],[' ','Saltar','Espacio','primary wide']],
-    4:[['x','Disparar','X',''],['z','Saltar','Z','primary']]
+    1:[{id:'jump',label:'Saltar',style:'primary'}],
+    2:[{id:'shoot',label:'Disparar'},{id:'longjump',label:'Salto largo'},{id:'jump',label:'Saltar',style:'primary'}],
+    3:[{id:'turbo',label:'Turbo'},{id:'missile',label:'Misil'},{id:'jump',label:'Saltar',style:'primary wide'}],
+    4:[{id:'shoot',label:'Disparar'},{id:'jump',label:'Saltar',style:'primary'}]
   };
+  const padGlyphs={ArrowUp:'▲',ArrowDown:'▼',ArrowLeft:'◀',ArrowRight:'▶'};
   function send(key,down){
     try {const frame=document.getElementById('emulator').contentWindow;if(typeof frame?.setGameKey==='function')frame.setGameKey(key,down);}catch{}
   }
@@ -44,6 +45,7 @@
   function finish(event,cancelled=false){
     const pointer=pointers.get(event.pointerId);if(!pointer)return;
     event.preventDefault();
+    window.vascoletRefocus?.();
     pointer.finished=true;
     // Keep short action taps visible for at least one guest input poll.
     const remaining=cancelled||pointer.isPad?0:(number===3?160:80)-(performance.now()-pointer.began);
@@ -67,11 +69,43 @@
   toggle.addEventListener('change',()=>{enabled=toggle.checked;try{localStorage.setItem('vascolet-touch-controls',JSON.stringify(enabled));}catch{}refresh();});
   window.addEventListener('blur',releaseAll);window.addEventListener('pagehide',releaseAll);window.addEventListener('orientationchange',releaseAll);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseAll();});
-  window.touchControls={refresh,releaseAll,configure(gameNumber){
+  function refreshBindings(){
+    const controls=window.VascoletControls;
+    if(!controls||!number)return;
+    for(const button of panel.querySelectorAll('[data-key]')){
+      const action=controls.forLogical(button.dataset.key);
+      if(!action)continue;
+      const code=controls.bound(action.id),cap=controls.label(code),changed=code!==controls.defaultCode(action.key);
+      if(button.closest('#touch-dpad')){
+        button.replaceChildren();
+        const glyph=document.createElement('span');glyph.textContent=padGlyphs[button.dataset.key]||button.dataset.key;button.append(glyph);
+        if(changed){const keycap=document.createElement('small');keycap.textContent=cap;button.append(keycap);}
+        button.setAttribute('aria-label',changed?`${action.label} (${cap})`:action.label);
+      }else if(button.closest('.touch-utility')){
+        button.textContent=cap+(action.id==='confirm'?' ↵':'');
+        button.setAttribute('aria-label',`${action.label}: ${cap}`);
+      }else{
+        const keycap=button.querySelector('small');
+        if(keycap)keycap.textContent=cap;else{const fresh=document.createElement('small');fresh.textContent=cap;button.append(fresh);}
+        button.setAttribute('aria-label',`${action.label} (${cap})`);
+      }
+    }
+  }
+  window.touchControls={refresh,releaseAll,refreshBindings,configure(gameNumber){
     releaseAll();number=gameNumber;actions.replaceChildren();
-    for(const [key,label,cap,style] of profiles[number]||[]){const button=document.createElement('button');button.type='button';button.dataset.key=key;button.className=style;button.setAttribute('aria-label',`${label} (${cap})`);button.setAttribute('aria-pressed','false');const caption=document.createElement('span'),keycap=document.createElement('small');caption.textContent=label;keycap.textContent=cap;button.append(caption,keycap);actions.append(button);}
+    window.VascoletControls?.configure(gameNumber);
+    for(const item of profiles[number]||[]){
+      const button=document.createElement('button');button.type='button';
+      button.dataset.key=window.VascoletControls?window.VascoletControls.logical(item.id):'';
+      button.className=item.style||'';button.setAttribute('aria-pressed','false');
+      const caption=document.createElement('span');caption.textContent=item.label;
+      button.append(caption,document.createElement('small'));
+      actions.append(button);
+    }
+    refreshBindings();
     if(number===4)hint.textContent='Doble toque en ← o → para correr. Podés mantener una dirección y una acción a la vez. Tocá el juego para usar sus menús.';
     const coarse=matchMedia('(pointer: coarse)').matches;try{enabled=JSON.parse(localStorage.getItem('vascolet-touch-controls'))??coarse;}catch{enabled=coarse;}refresh();
   }};
+  window.VascoletControls?.onChange(()=>window.touchControls.refreshBindings());
   if(typeof game!=='undefined'&&game)window.touchControls.configure(game.number);
 })();

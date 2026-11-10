@@ -79,7 +79,7 @@ start.onclick=async()=>{
         finally{if(data.bitmap){data.bitmap.close();bitmapClosed++;}Atomics.store(wire.c,P.FRAME_ACK,data.id);Atomics.notify(wire.c,P.FRAME_ACK);}return;
       }
       if(data.type==='progress'){say(data.text);return;}
-      if(data.type==='log'){log(data.line);try{const item=JSON.parse(data.line);if(item.game)lastReport=item;}catch{}return;}
+      if(data.type==='log'){log(data.line);/*if(data.line.indexOf('CKPT')!==-1){try{alert(data.line);}catch{}}*/try{const item=JSON.parse(data.line);if(item.game)lastReport=item;}catch{}return;}
       if(data.type==='save'){
         saveCount++;
         void (async()=>{try{const save=VascoletSaveStore.pack(data.files);await VascoletSaveStore.put(save);settleSave(data.request,save);dispatchEvent(new CustomEvent('vascolet-saved',{detail:{files:save.files.length}}));}catch(error){settleSave(data.request,null,error);dispatchEvent(new CustomEvent('vascolet-save-error',{detail:String(error)}));}})();return;

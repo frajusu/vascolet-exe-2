@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0a0a0c">
   <title>Vascolet</title>
   <link rel="stylesheet" href="style.css">
+  <script src="aot/controls.js" defer></script>
   <script src="launcher.js?v=aot-cachefix-2" defer></script>
   <script src="touch-controls.js" defer></script>
 </head>
@@ -34,6 +35,11 @@
     <p id="touch-hint" class="muted" hidden>Podés mantener una dirección y una acción a la vez. Tocá directamente el juego para usar sus menús.</p>
     <button id="restart">Aplicar y reiniciar</button>
     <button id="fullscreen">Pantalla completa</button>
+    <hr>
+    <h2>Controles</h2>
+    <p class="muted">Tocá una tecla para reasignarla. Se guarda en este navegador y el juego sigue recibiendo la tecla original.</p>
+    <div id="keybinds"></div>
+    <div class="row"><button id="keybind-reset">Restaurar</button></div>
     <hr>
     <h2>Partida</h2>
     <p class="muted">Se conservan automáticamente los archivos que guarda el juego en este navegador. Usá también el guardado del propio juego. Las partidas de la versión anterior siguen intactas: podés exportarlas desde ese motor e importarlas aquí. Los guardados de Windows son separados.</p>
