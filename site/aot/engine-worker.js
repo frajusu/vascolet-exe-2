@@ -2,6 +2,7 @@
 importScripts('./protocol.js');
 const P=VascoletWire;
 let control,input,audio,sharedPixels,framePixels,numberView,mod,rpcID=0,frameID=0;
+let gameNumber=2,gameHome='/home/vascolet2';
 const decoder=new TextDecoder();
 const stats={frames:0,images:0,imageBytesCopied:0,events:0,wasmBytes:0,lastTitle:''};
 function stopped(){return Atomics.load(control,P.STOP)!==0;}
@@ -15,7 +16,7 @@ function normalize(path){const parts=[];for(const p of path.split('/')){if(!p||p
 function saveFiles(){
   const files=[];let bytes=0;
     function walk(dir){for(const name of mod.FS.readdir(dir)){if(name==='.'||name==='..')continue;const path=dir+'/'+name,info=mod.FS.stat(path);if(mod.FS.isDir(info.mode))walk(path);else{if(files.length>=512||bytes+info.size>8*1024*1024)throw Error('El guardado supera el límite de exportación');const raw=mod.FS.readFile(path);bytes+=raw.length;files.push({path:path.slice('/home/'.length),raw});}}}
-    walk('/home/vascolet2');return files;
+    walk(gameHome);return files;
 }
 function saveIfRequested(){
   const request=Atomics.load(control,P.SAVE_REQUEST);if(request===Atomics.load(control,P.SAVE_ACK))return;
@@ -24,10 +25,13 @@ function saveIfRequested(){
   Atomics.store(control,P.SAVE_ACK,request);
 }
 function installSaveHooks(){
-  const home=path=>typeof path==='string'&&path.startsWith('/home/vascolet2/');
-  const close=mod.FS.close.bind(mod.FS);mod.FS.close=stream=>{const changed=home(stream.path)&&(stream.flags&3)!==0;const result=close(stream);if(changed)rpc('persist',[saveFiles()]);return result;};
-  const rename=mod.FS.rename.bind(mod.FS);mod.FS.rename=(from,to)=>{const result=rename(from,to);if(home(from)||home(to))rpc('persist',[saveFiles()]);return result;};
-  const unlink=mod.FS.unlink.bind(mod.FS);mod.FS.unlink=path=>{const result=unlink(path);if(home(path))rpc('persist',[saveFiles()]);return result;};
+  const home=path=>typeof path==='string'&&path.startsWith(gameHome+'/');
+  /* A storage failure (quota, private mode, blocked DB) must never crash the
+   * guest mid-fclose: warn and keep playing. */
+  const persist=()=>{try{rpc('persist',[saveFiles()]);}catch(error){postMessage({type:'log',line:'Aviso de guardado: '+error});}};
+  const close=mod.FS.close.bind(mod.FS);mod.FS.close=stream=>{const changed=home(stream.path)&&(stream.flags&3)!==0;const result=close(stream);if(changed)persist();return result;};
+  const rename=mod.FS.rename.bind(mod.FS);mod.FS.rename=(from,to)=>{const result=rename(from,to);if(home(from)||home(to))persist();return result;};
+  const unlink=mod.FS.unlink.bind(mod.FS);mod.FS.unlink=path=>{const result=unlink(path);if(home(path))persist();return result;};
 }
 function eventQueue(){
   const held=new Set(),pending=[];let buttons=0,peek=null;
@@ -40,12 +44,11 @@ function renderer(){
   const canvas=new OffscreenCanvas(512,384),context=canvas.getContext('2d',{alpha:false}),source=new OffscreenCanvas(1,1),ctx=source.getContext('2d',{alpha:false});let image;
   return {resize(w,h){canvas.width=w;canvas.height=h;postMessage({type:'resize',w,h});},present(heap,ptr,w,h,pitch,kind,dw,dh){
     if(stopped())throw Error('Prueba detenida');if(!image||source.width!==w||source.height!==h){source.width=w;source.height=h;image=ctx.createImageData(w,h);}const out=image.data;
-    for(let y=0;y<h;y++)for(let x=0;x<w;x++){const at=(y*w+x)*4;
-      if(kind===1){const p=ptr+y*pitch+(x>>1)*4,yy=heap[p+(x&1?2:0)],u=heap[p+1]-128,v=heap[p+3]-128,c=(yy-16)*298;out[at]=(c+409*v+128)>>8;out[at+1]=(c-100*u-208*v+128)>>8;out[at+2]=(c+516*u+128)>>8;}
-      else if(kind===2){const p=ptr+y*pitch+x*2,value=heap[p]|heap[p+1]<<8;out[at]=(value>>11)*255/31;out[at+1]=(value>>5&63)*255/63;out[at+2]=(value&31)*255/31;}
-      else if(kind===3){const p=ptr+y*pitch+x*4;out[at]=heap[p];out[at+1]=heap[p+1];out[at+2]=heap[p+2];}else throw Error('Formato de pantalla no soportado');out[at+3]=255;
-    }
-    ctx.putImageData(image,0,0);context.drawImage(source,0,0,dw,dh);stats.frames++;stats.wasmBytes=heap.buffer.byteLength;
+    if(kind===1){for(let y=0;y<h;y++){let row=ptr+y*pitch,at=y*w*4;for(let x=0;x<w;x+=2){const u=heap[row+1]-128,v=heap[row+3]-128,c0=(heap[row]-16)*298,c1=(heap[row+2]-16)*298;out[at]=(c0+409*v+128)>>8;out[at+1]=(c0-100*u-208*v+128)>>8;out[at+2]=(c0+516*u+128)>>8;out[at+3]=255;out[at+4]=(c1+409*v+128)>>8;out[at+5]=(c1-100*u-208*v+128)>>8;out[at+6]=(c1+516*u+128)>>8;out[at+7]=255;row+=4;at+=8;}}}
+    else if(kind===2){for(let y=0;y<h;y++){let row=ptr+y*pitch,at=y*w*4;for(let x=0;x<w;x++){const value=heap[row]|heap[row+1]<<8;out[at]=(value>>8&248)|(value>>13&7);out[at+1]=(value>>3&252)|(value>>9&3);out[at+2]=(value<<3&248)|(value>>2&7);out[at+3]=255;row+=2;at+=4;}}}
+    else if(kind===3){for(let y=0;y<h;y++){let row=ptr+y*pitch,at=y*w*4;for(let x=0;x<w;x++){out[at]=heap[row];out[at+1]=heap[row+1];out[at+2]=heap[row+2];out[at+3]=255;row+=4;at+=4;}}}
+    else throw Error('Formato de pantalla no soportado');
+    ctx.putImageData(image,0,0);context.drawImage(source,0,0,dw,dh);stats.frames++;stats.wasmBytes=heap.buffer.byteLength;stats.workerHeapBytes=performance.memory?performance.memory.usedJSHeapSize:-1;
     const id=++frameID;
     if(framePixels){
       /* Raw RGBA via shared memory: a per-frame ImageBitmap leaked one GPU texture per frame in Opera's GPU process. */
@@ -64,16 +67,17 @@ function host(){const video=renderer();let imageName='',image=null;
     init:flags=>rpc('init',[flags]),resize:video.resize,caption(text){stats.lastTitle=text;postMessage({type:'caption',text});},cursor:mode=>rpc('cursor',[mode]),
     image(path){path=normalize(path);if(path!==imageName){const raw=mod.FS.readFile('/game/'+path);rpc('image',[path],raw);const w=Atomics.load(control,P.IMAGE_W),h=Atomics.load(control,P.IMAGE_H),length=Atomics.load(control,P.IMAGE_LENGTH);if(w<1||h<1||length!==w*h*4||length>P.PIXEL_BYTES)throw Error('Imagen fuera del límite');imageName=path;image={w,h,pixels:sharedPixels.subarray(0,length)};stats.images++;stats.imageBytesCopied+=length;}return image;},
     present:video.present,shouldStop:stopped,
-    openAudio:(...args)=>rpc('openAudio',args),allocateChannels:n=>rpc('allocateChannels',[n]),soundDuration:path=>rpc('soundDuration',[normalize(path)]),play:(...args)=>rpc('play',args),halt:n=>rpc('halt',[n]),freeSound:n=>rpc('freeSound',[n]),pause:(...args)=>rpc('pause',args),volume:(...args)=>rpc('volume',args),playing:(...args)=>rpc('playing',args)
+    openAudio:(...args)=>rpc('openAudio',args),allocateChannels:n=>rpc('allocateChannels',[n]),soundDuration:path=>rpc('soundDuration',[normalize(path)]),play:(...args)=>rpc('play',args),halt:n=>rpc('halt',[n]),freeSound:n=>rpc('freeSound',[n]),pause:(...args)=>rpc('pause',args),volume:(...args)=>rpc('volume',args),playing:(...args)=>rpc('playing',args),playMusic:(...args)=>rpc('playMusic',args),haltMusic:()=>rpc('haltMusic',[]),pauseMusic:v=>rpc('pauseMusic',[v]),musicVolume:v=>rpc('musicVolume',[v]),musicPlaying:()=>rpc('musicPlaying',[]),musicFinished:()=>rpc('musicFinished',[])
   };
 }
 onmessage=async({data})=>{
   if(data.type!=='start')return;control=new Int32Array(data.control);input=new Uint8Array(data.input);audio=new Int32Array(data.audio);sharedPixels=new Uint8Array(data.pixels);framePixels=data.frame?new Uint8Array(data.frame):null;numberView=new DataView(data.control);
+  gameNumber=Number(data.game||2);if(![1,2,3,4].includes(gameNumber))throw Error('Juego no compatible');gameHome='/home/vascolet'+gameNumber;
   try{
     const base=data.base;stats.runtimeBase=base;importScripts(base+'worker-runtime.js');postMessage({type:'progress',text:'Cargando el módulo y los recursos originales…'});
     mod=await createVascoletAOTWorker({locateFile:file=>base+file,aotHost:host(),print:line=>postMessage({type:'log',line}),printErr:line=>postMessage({type:'log',line})});
-    for(const name of ['data','instance','tmp'])mod.FS.mkdirTree('/home/vascolet2/'+name);mod.FS.chdir('/game');
-    if(data.save){let total=0;for(const file of data.save.files){const parts=file.path.split('/');if(parts[0]!=='vascolet2'||parts.length<2||parts.some(p=>!p||p==='.'||p==='..'||p.includes('\\')||p.includes('\0')))throw Error('Ruta de guardado no válida');const text=atob(file.data);total+=text.length;if(total>8*1024*1024)throw Error('Guardado demasiado grande');const raw=Uint8Array.from(text,c=>c.charCodeAt(0));const path='/home/'+file.path;mod.FS.mkdirTree(path.slice(0,path.lastIndexOf('/')));mod.FS.writeFile(path,raw);}}
+    for(const name of ['data','instance','tmp'])mod.FS.mkdirTree(gameHome+'/'+name);mod.FS.chdir('/game');
+    if(data.save){let total=0;for(const file of data.save.files){const parts=file.path.split('/');if(parts[0]!=='vascolet'+gameNumber||parts.length<2||parts.some(p=>!p||p==='.'||p==='..'||p.includes('\\')||p.includes('\0')))throw Error('Ruta de guardado no válida');const text=atob(file.data);total+=text.length;if(total>8*1024*1024)throw Error('Guardado demasiado grande');const raw=Uint8Array.from(text,c=>c.charCodeAt(0));const path='/home/'+file.path;mod.FS.mkdirTree(path.slice(0,path.lastIndexOf('/')));mod.FS.writeFile(path,raw);}}
     function walk(dir){for(const name of mod.FS.readdir(dir)){if(name==='.'||name==='..')continue;const path=dir+'/'+name;if(mod.FS.isDir(mod.FS.stat(path).mode))walk(path);else if(/\.(ogg|wav|mp3)$/i.test(path)){const raw=mod.FS.readFile(path);postMessage({type:'sound-file',path:normalize(path),raw},[raw.buffer]);}}}walk('/game');
     installSaveHooks();mod._set_entry_budget(500000000);postMessage({type:'progress',text:'Arrancando el juego original. La carga puede tardar…'});
     const status=mod._run_startup();postMessage({type:'done',status,stats});

@@ -6,17 +6,26 @@ window.createAOTBrowserHost = (canvas, {frameLimit=3}={}) => {
   const events=[],images=new Map(),sounds=new Map(),channels=new Map(),finished=[],mouse={x:0,y:0,buttons:0},held=new Set();
   const stats={frames:0,events:0,width:0,height:0,images:0,decodedBytes:0,lastTitle:'',initialized:0};
   let image,shown=true,audio,meter,channelLimit=8,muted=false;
+  let music=null,musicVol=128,musicDone=false;
   const volumes=new Map();
   function assetName(path){const parts=[];for(const part of path.split('/')){if(!part||part==='.')continue;if(part==='..')parts.pop();else parts.push(part);}if(parts[0]==='game')parts.shift();return parts.join('/');}
   function audioContext(){if(!audio){const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw Error('Web Audio unavailable');audio=new Audio();meter=audio.createAnalyser();meter.fftSize=512;if(!muted)meter.connect(audio.destination);}return audio;}
   const bufferBytes=buffer=>buffer.length*buffer.numberOfChannels*4;
-  function trimDecodedSounds(budget=32*1024*1024){const active=new Set([...channels.values()].map(record=>record.buffer));let idle=0;for(const buffer of sounds.values())if(!active.has(buffer))idle+=bufferBytes(buffer);for(const [path,buffer] of sounds){if(idle<=budget)break;if(active.has(buffer))continue;sounds.delete(path);idle-=bufferBytes(buffer);stats.audioDecodedBytes-=bufferBytes(buffer);}stats.sounds=sounds.size;return stats.audioDecodedBytes||0;}
+  let rgb565Lut=null;
+  function rgb565(){if(!rgb565Lut){rgb565Lut=new Uint32Array(65536);for(let v=0;v<65536;v++)rgb565Lut[v]=255<<24|(((v<<3&248)|(v>>2&7))<<16)|(((v>>3&252)|(v>>9&3))<<8)|((v>>8&248)|(v>>13&7));}return rgb565Lut;}
+  function trimDecodedSounds(budget=32*1024*1024){const active=new Set([...channels.values()].map(record=>record.buffer));if(music)active.add(music.buffer);let idle=0;for(const buffer of sounds.values())if(!active.has(buffer))idle+=bufferBytes(buffer);for(const [path,buffer] of sounds){if(idle<=budget)break;if(active.has(buffer))continue;sounds.delete(path);idle-=bufferBytes(buffer);stats.audioDecodedBytes-=bufferBytes(buffer);}stats.sounds=sounds.size;return stats.audioDecodedBytes||0;}
   function finish(channel,record){if(channels.get(channel)!==record)return;channels.delete(channel);record.node?.disconnect();record.gain?.disconnect();finished.push(channel);trimDecodedSounds();}
   function startChannel(channel,record){
     const a=audioContext(),node=a.createBufferSource(),gain=a.createGain();record.node=node;record.gain=gain;node.buffer=record.buffer;node.loop=record.loops<0;gain.gain.value=(volumes.get(channel)??128)*record.chunkVolume/16384;node.connect(gain).connect(meter);record.started=a.currentTime;
     node.onended=()=>{node.disconnect();gain.disconnect();if(record.node!==node||record.paused||channels.get(channel)!==record)return;if(record.loops>0&&(!record.deadline||a.currentTime<record.deadline)){record.loops--;record.offset=0;startChannel(channel,record);}else finish(channel,record);};
     node.start(0,record.offset||0);if(record.deadline)node.stop(Math.max(a.currentTime,record.deadline));stats.audioStarts=(stats.audioStarts||0)+1;
   }
+  function startMusic(record){
+    const a=audioContext(),node=a.createBufferSource();record.node=node;node.buffer=record.buffer;node.loop=record.loops<0;node.connect(record.gain).connect(meter);record.started=a.currentTime;
+    node.onended=()=>{if(music!==record||record.paused)return;node.disconnect();if(record.loops>0){record.loops--;record.offset=0;startMusic(record);return;}record.gain.disconnect();music=null;musicDone=true;};
+    node.start(0,record.offset||0);
+  }
+  function stopMusicNode(record){if(record.node){record.node.onended=null;try{record.node.stop();}catch{}record.node.disconnect();}}
   const keys={ArrowUp:273,ArrowDown:274,ArrowRight:275,ArrowLeft:276,Enter:13,Escape:27,Space:32,ShiftLeft:304,ShiftRight:303,ControlLeft:306,ControlRight:305};
   const enqueue=event=>{if(events.length===256)events.shift();events.push(event);stats.events++;};
   function key(code,down){if(!Number.isInteger(code)||code<0||code>=323)return;if(held.has(code)===down)return;if(down)held.add(code);else held.delete(code);const e=new Uint8Array(20),v=new DataView(e.buffer);e[0]=down?2:3;e[2]=down?1:0;v.setInt32(8,code,true);v.setUint16(16,code<128?code:0,true);enqueue(e);}
@@ -62,16 +71,22 @@ window.createAOTBrowserHost = (canvas, {frameLimit=3}={}) => {
     present(heap,ptr,w,h,pitch,kind,dw,dh){
       if(!image||source.width!==w||source.height!==h){source.width=w;source.height=h;image=sourceContext.createImageData(w,h);}
       const out=image.data;
-      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      if(kind===2){const lut=rgb565(),out32=new Uint32Array(out.buffer,out.byteOffset,w*h);for(let y=0;y<h;y++){let from=ptr+y*pitch,to=y*w;for(let x=0;x<w;x++)out32[to++]=lut[heap[from]|heap[from+1]<<8],from+=2;}}
+      else for(let y=0;y<h;y++)for(let x=0;x<w;x++){
         const to=(y*w+x)*4;
         if(kind===1){const from=ptr+y*pitch+(x>>1)*4,yy=heap[from+(x&1?2:0)],u=heap[from+1]-128,v=heap[from+3]-128,c=(yy-16)*298;out[to]=(c+409*v+128)>>8;out[to+1]=(c-100*u-208*v+128)>>8;out[to+2]=(c+516*u+128)>>8;}
-        else if(kind===2){const at=ptr+y*pitch+x*2,pixel=heap[at]|heap[at+1]<<8;out[to]=(pixel>>11)*255/31;out[to+1]=(pixel>>5&63)*255/63;out[to+2]=(pixel&31)*255/31;}
         else if(kind===3){const from=ptr+y*pitch+x*4;out[to]=heap[from];out[to+1]=heap[from+1];out[to+2]=heap[from+2];}
         else throw Error('Unsupported SDL presentation kind');
         out[to+3]=255;
       }
       sourceContext.putImageData(image,0,0);context.drawImage(source,0,0,dw,dh);stats.frames++;
     },
+    playMusic(path,loops,volume){path=assetName(path);const buffer=sounds.get(path);if(!buffer)return -1;if(music)this.haltMusic();musicDone=false;musicVol=Math.max(0,Math.min(Number(volume)||0,128));const gain=audioContext().createGain();gain.gain.value=musicVol/128;music={buffer,loops:Number(loops)||0,gain,offset:0,paused:false,node:null,started:0};startMusic(music);return 0;},
+    haltMusic(){if(music){stopMusicNode(music);music.gain.disconnect();music=null;}return 0;},
+    pauseMusic(paused){if(!music||music.paused===!!paused)return 0;const a=audioContext();if(paused){music.offset=((music.offset||0)+a.currentTime-music.started)%music.buffer.duration;music.paused=true;stopMusicNode(music);music.gain.disconnect();}else{music.paused=false;startMusic(music);}return 0;},
+    musicVolume(value){const previous=musicVol;if(value>=0){musicVol=Math.max(0,Math.min(value,128));if(music)music.gain.gain.value=musicVol/128;}return previous;},
+    musicPlaying(){return music&&!music.paused?1:0;},
+    musicFinished(){if(musicDone){musicDone=false;return 1;}return 0;},
     requestStop:false,
     shouldStop(){return this.requestStop||stats.frames>=frameLimit;}
   };
