@@ -77,6 +77,9 @@ window.createAOTBrowserHost = (canvas, {frameLimit=3}={}) => {
       }
     },
     present(heap,ptr,w,h,pitch,kind,dw,dh){
+      if(kind===4){/* wasm pre-converted (rgb565/YUY2->RGBA): zero-copy ImageData view, no JS pixel loop */
+        sourceContext.putImageData(new ImageData(new Uint8ClampedArray(heap.buffer,ptr,w*h*4),w),0,0);
+      }else{
       if(!image||source.width!==w||source.height!==h){source.width=w;source.height=h;image=sourceContext.createImageData(w,h);}
       const out=image.data;
       if(kind===2){const lut=rgb565(),out32=new Uint32Array(out.buffer,out.byteOffset,w*h);for(let y=0;y<h;y++){let from=ptr+y*pitch,to=y*w;for(let x=0;x<w;x++)out32[to++]=lut[heap[from]|heap[from+1]<<8],from+=2;}}
@@ -87,7 +90,9 @@ window.createAOTBrowserHost = (canvas, {frameLimit=3}={}) => {
         else throw Error('Unsupported SDL presentation kind');
         out[to+3]=255;
       }
-      sourceContext.putImageData(image,0,0);context.drawImage(source,0,0,dw,dh);stats.frames++;
+      sourceContext.putImageData(image,0,0);
+      }
+      context.drawImage(source,0,0,dw,dh);stats.frames++;
     },
     playMusic(path,loops,volume){path=assetName(path);const buffer=sounds.get(path);if(!buffer)return -1;if(music)this.haltMusic();musicDone=false;musicVol=Math.max(0,Math.min(Number(volume)||0,128));const gain=audioContext().createGain();gain.gain.value=musicVol/128;music={buffer,loops:Number(loops)||0,gain,offset:0,paused:false,node:null,started:0};startMusic(music);return 0;},
     haltMusic(){if(music){stopMusicNode(music);music.gain.disconnect();music=null;}return 0;},

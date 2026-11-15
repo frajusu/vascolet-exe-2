@@ -3,11 +3,12 @@ const P=VascoletWire,canvas=document.getElementById('game'),context=canvas.getCo
 const GAME_NUMBER=Number(globalThis.VASCOLET_GAME_NUMBER||2);
 const status=document.getElementById('status'),start=document.getElementById('start'),stop=document.getElementById('stop'),logBox=document.getElementById('log');
 const backend=createAOTBrowserHost(canvas),rawSounds=new Map(),durations=new Map(),pendingAudio=new Map();
-let worker=null,wire=null,serial=0,importedSave=null,watchdog=null,lastStats={},lastReport=null,lines=[],saveCount=0,frameSeen=0,bitmapClosed=0,imageRpcClosed=0,frameImage=null;
+let worker=null,wire=null,serial=0,importedSave=null,watchdog=null,lastStats={},lastReport=null,lines=[],saveCount=0,frameSeen=0,bitmapClosed=0,imageRpcClosed=0,frameImages=[null,null];
+let drawMs=0,lastFrameAt=0,hitchCount=0,hitchMaxMs=0;
 const saveWaiters=new Map();
 function requestSave(){if(!worker)return Promise.reject(Error('El juego no está iniciado.'));const request=Atomics.add(wire.c,P.SAVE_REQUEST,1)+1;return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{saveWaiters.delete(request);reject(Error('El guardado tardó demasiado.'));},15000);saveWaiters.set(request,{resolve,reject,timer});});}
 function settleSave(request,save,error){for(const [id,item] of saveWaiters)if(id<=request){clearTimeout(item.timer);saveWaiters.delete(id);error?item.reject(error):item.resolve(save);}}
-const say=text=>{status.textContent=text;dispatchEvent(new CustomEvent('vascolet-status',{detail:text}));};
+const say=text=>{if(status.textContent===text)return;status.textContent=text;dispatchEvent(new CustomEvent('vascolet-status',{detail:text}));};
 function log(text){lines.push(String(text));if(lines.length>120)lines.shift();logBox.textContent=lines.join('\n');dispatchEvent(new CustomEvent('vascolet-log',{detail:String(text)}));}
 function normalize(path){const parts=[];for(const p of path.split('/')){if(!p||p==='.')continue;if(p==='..')parts.pop();else parts.push(p);}if(parts[0]==='game')parts.shift();return parts.join('/');}
 function createWire(){const control=new SharedArrayBuffer(128),input=new SharedArrayBuffer(P.QUEUE*20),audio=new SharedArrayBuffer(P.QUEUE*4),pixels=new SharedArrayBuffer(P.PIXEL_BYTES),frame=new SharedArrayBuffer(P.PIXEL_BYTES);return {control,input,audio,pixels,frame,c:new Int32Array(control),events:new Uint8Array(input),ended:new Int32Array(audio),bytes:new Uint8Array(pixels),framePixels:new Uint8Array(frame),number:new DataView(control)};}
@@ -53,7 +54,7 @@ function saveDiagnostic(text){try{sessionStorage.setItem('vascolet-last-stop-'+G
 function finish(text,failed=false){saveDiagnostic(text);serial++;if(wire){Atomics.store(wire.c,P.STOP,1);Atomics.notify(wire.c,P.RPC_DONE);Atomics.notify(wire.c,P.FRAME_ACK);}worker?.terminate();worker=null;clearTimeout(watchdog);backend.halt(-1);backend.finished.length=0;backend.trimDecodedSounds?.(32*1024*1024);for(const item of saveWaiters.values()){clearTimeout(item.timer);item.reject(Error(text));}saveWaiters.clear();start.disabled=false;stop.disabled=true;document.getElementById('launch').hidden=failed;document.getElementById('failure').hidden=!failed;document.getElementById('failure-text').textContent=text;say(text);if(failed)dispatchEvent(new CustomEvent('vascolet-failure',{detail:text}));}
 start.onclick=async()=>{
   if(worker)return;if(!crossOriginIsolated||typeof SharedArrayBuffer==='undefined'){say('Abre la prueba desde el servidor local indicado, no como archivo.');return;}
-  start.disabled=true;lines=[];lastReport=null;rawSounds.clear();durations.clear();backend.halt(-1);backend.finished.length=0;wire=createWire();const token=++serial;lastStats={};
+  start.disabled=true;lines=[];lastReport=null;rawSounds.clear();durations.clear();backend.halt(-1);backend.finished.length=0;wire=createWire();frameImages=[null,null];const token=++serial;lastStats={};
   try{
     const saved=importedSave||await VascoletSaveStore.load();if(importedSave)await VascoletSaveStore.put(importedSave);importedSave=null;void backend.resumeAudio().catch(log);worker=new Worker('./engine-worker.js'+(globalThis.VASCOLET_BUILD_ID?'?v='+encodeURIComponent(VASCOLET_BUILD_ID):''));stop.disabled=false;document.getElementById('launch').hidden=true;document.getElementById('failure').hidden=true;canvas.focus();say('Preparando los recursos originales…');
     worker.onmessage=({data})=>{
@@ -64,16 +65,30 @@ start.onclick=async()=>{
       if(data.type==='caption'){canvas.setAttribute('aria-label',data.text);return;}
       if(data.type==='frame'){
         frameSeen++;
+        const draw0=performance.now();
+        if(lastFrameAt){const gap=draw0-lastFrameAt;if(gap>150)hitchCount++;if(gap>hitchMaxMs)hitchMaxMs=gap;}
+        lastFrameAt=draw0;
         try{
           if(data.bitmap){ /* legacy worker: per-frame ImageBitmap */
             if(canvas.width!==data.bitmap.width||canvas.height!==data.bitmap.height)backend.resize(data.bitmap.width,data.bitmap.height);
             context.drawImage(data.bitmap,0,0);
           }else{
             if(canvas.width!==data.w||canvas.height!==data.h)backend.resize(data.w,data.h);
-            if(!frameImage||frameImage.width!==data.w||frameImage.height!==data.h)frameImage=context.createImageData(data.w,data.h);
-            frameImage.data.set(wire.framePixels.subarray(0,data.w*data.h*4));
-            context.putImageData(frameImage,0,0);
+            const bytes=data.w*data.h*4,off=data.off||0,slot=data.slot||0;
+            if(off+bytes>wire.framePixels.length)throw Error('El frame supera el límite de memoria compartida');
+            /* View the shared frame buffer directly (one ImageData per buffer slot):
+             * skip the per-frame 4 MiB copy. */
+            let fi=frameImages[slot];
+            if(!fi||fi.w!==data.w||fi.h!==data.h){
+              let shared=true,img;
+              try{img=new ImageData(new Uint8ClampedArray(wire.frame.buffer,off,bytes),data.w,data.h);}
+              catch{shared=false;img=context.createImageData(data.w,data.h);}
+              fi=frameImages[slot]={img,shared,w:data.w,h:data.h};
+            }
+            if(!fi.shared)fi.img.data.set(wire.framePixels.subarray(off,off+bytes));
+            context.putImageData(fi.img,0,0);
           }
+          drawMs+=performance.now()-draw0;data.stats.drawMs=drawMs;data.stats.hitchCount=hitchCount;data.stats.hitchMaxMs=hitchMaxMs;
           lastStats=data.stats;if(data.id===1)dispatchEvent(new CustomEvent('vascolet-ready'));say('Juego en pantalla · clic para enfocar · Enter para continuar');
         }
         finally{if(data.bitmap){data.bitmap.close();bitmapClosed++;}Atomics.store(wire.c,P.FRAME_ACK,data.id);Atomics.notify(wire.c,P.FRAME_ACK);}return;
