@@ -1,7 +1,7 @@
 /* Original synchronous AOT code runs off the UI thread. No Asyncify pass. */
 importScripts('./protocol.js');
 const P=VascoletWire;
-let control,input,audio,sharedPixels,framePixels,numberView,mod,rpcID=0,frameID=0;
+let control,input,audio,sharedPixels,framePixels,numberView,mod,rpcID=0,frameID=0,lastPresentDone=0;
 let gameNumber=2,gameHome='/home/vascolet2';
 const decoder=new TextDecoder();
 const stats={frames:0,images:0,imageBytesCopied:0,events:0,wasmBytes:0,lastTitle:''};
@@ -12,7 +12,10 @@ function stopped(){return Atomics.load(control,P.STOP)!==0;}
 function waitFor(index,value,seconds=20){const until=performance.now()+seconds*1000;while(Atomics.load(control,index)!==value){if(stopped())throw Error('Prueba detenida');if(performance.now()>until)throw Error('El navegador no respondió dentro del límite');const old=Atomics.load(control,index);if(old!==value)Atomics.wait(control,index,old,250);}}
 function waitForAtLeast(index,value,seconds=20){const until=performance.now()+seconds*1000;while(Atomics.load(control,index)<value){if(stopped())throw Error('Prueba detenida');if(performance.now()>until)throw Error('El navegador no respondió dentro del límite');Atomics.wait(control,index,Atomics.load(control,index),250);}}
 function rpc(method,args=[],raw){
-  const id=++rpcID;postMessage({type:'rpc',id,method,args,raw},raw?[raw.buffer]:[]);waitFor(P.RPC_DONE,id);
+  /* Telemetría: rpc sincroniza el worker con el hilo principal; acumula en
+   * stats.rpcMs para que el overlay separe espera de cómputo en el celular. */
+  const id=++rpcID,t0=performance.now();postMessage({type:'rpc',id,method,args,raw},raw?[raw.buffer]:[]);waitFor(P.RPC_DONE,id);
+  stats.rpcMs=(stats.rpcMs||0)+(performance.now()-t0);
   if(Atomics.load(control,P.RPC_ERROR)){const n=Atomics.load(control,P.ERROR_LENGTH);throw Error(decoder.decode(sharedPixels.subarray(0,Math.min(n,P.ERROR_BYTES))));}
   return numberView.getFloat64(P.NUMBER_OFFSET,true);
 }
@@ -52,6 +55,12 @@ function renderer(){
   return {resize(w,h){canvas.width=w;canvas.height=h;postMessage({type:'resize',w,h});},present(heap,ptr,w,h,pitch,kind,dw,dh){
     if(stopped())throw Error('Prueba detenida');
     const t0=performance.now();
+    /* Desglose del residual "juego": intervalo entre presentaciones (guestMs)
+     * = cómputo wasm + esperas de pacing (yieldMs, medido en browser_sdl_yield)
+     * + idas y vueltas rpc al hilo principal. Los contadores de llamadas salen
+     * del host (exports) para poder estimar el costo de cada cruce wasm->JS. */
+    if(lastPresentDone)stats.guestMs=(stats.guestMs||0)+(t0-lastPresentDone);
+    if(mod){stats.yieldMs=mod.aotHost.yieldMs||0;stats.hostCalls=mod._get_host_calls?mod._get_host_calls():0;stats.tickCalls=mod._get_tick_calls?mod._get_tick_calls():0;stats.pollCalls=mod._get_poll_count?mod._get_poll_count():0;}
     saveIfRequested();
     if(kind===4){/* wasm pre-converted rgb565->RGBA: zero-copy view, no JS pixel loop */
       const bytes=w*h*4;
@@ -74,6 +83,7 @@ function renderer(){
         frameMsg.id=id;frameMsg.off=off;frameMsg.slot=id&1;frameMsg.w=w;frameMsg.h=h;postMessage(frameMsg);
         stats.presentMs=(stats.presentMs||0)+(performance.now()-t0);
         mod._renew_entry_budget();
+        lastPresentDone=performance.now();
         return;
       }
       if(source.width!==w||source.height!==h){source.width=w;source.height=h;}
@@ -97,7 +107,7 @@ function renderer(){
     }else{
       const bitmap=canvas.transferToImageBitmap();postMessage({type:'frame',id,bitmap,stats:{...stats}},[bitmap]);
     }
-    waitFor(P.FRAME_ACK,id,20);mod._renew_entry_budget();
+    waitFor(P.FRAME_ACK,id,20);mod._renew_entry_budget();lastPresentDone=performance.now();
   }};
 }
 function host(){const video=renderer();let imageName='',image=null;
