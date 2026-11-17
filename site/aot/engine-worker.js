@@ -64,7 +64,7 @@ function renderer(){
     saveIfRequested();
     if(kind===4){/* wasm pre-converted rgb565->RGBA: zero-copy view, no JS pixel loop */
       const bytes=w*h*4;
-      if(framePixels&&dw===w&&dh===h&&canvas.width===w&&canvas.height===h&&bytes*2<=framePixels.length){
+      if(framePixels&&dw===w&&dh===h&&bytes*2<=framePixels.length){
         /* Identity present: skip the OffscreenCanvas round trip entirely
          * (putImageData + drawImage + getImageData readback + copy cost ~4 full-frame
          * passes on the phone). One memcpy wasm->SAB; the main thread draws straight
@@ -73,7 +73,11 @@ function renderer(){
          * id-1 (previous user of this slot was id-2, so ack id-1 suffices). Guest
          * work of frame id overlaps main's putImageData of id-1, but the 4 MiB
          * memcpy never runs concurrently with it: concurrent full-frame copies
-         * saturate phone memory bandwidth (cost us fps). */
+         * saturate phone memory bandwidth (cost us fps).
+         * (The old canvas.width/height===w,h precondition is gone: identity never
+         * touches the worker canvas, and it wrongly rejected every overlay/video
+         * present whose source size differs from the canvas — forcing the phone
+         * onto the legacy readback path.) */
         const id=++frameID,stride=framePixels.length>>1,off=(id&1)*stride;
         const wait0=performance.now();
         if(id>1)waitForAtLeast(P.FRAME_ACK,id-1,20);
@@ -99,15 +103,32 @@ function renderer(){
     context.drawImage(source,0,0,dw,dh);stats.frames++;stats.wasmBytes=heap.buffer.byteLength;stats.workerHeapBytes=performance.memory?performance.memory.usedJSHeapSize:-1;
     const id=++frameID;
     if(framePixels){
-      /* Raw RGBA via shared memory: a per-frame ImageBitmap leaked one GPU texture per frame in Opera's GPU process. */
-      const width=canvas.width,height=canvas.height,bytes=width*height*4;
-      if(bytes>framePixels.length)throw Error('El frame supera el límite de memoria compartida');
-      framePixels.set(context.getImageData(0,0,width,height).data);
-      postMessage({type:'frame',id,w:width,h:height,stats:{...stats}});
+      /* Legacy (scaled) present, double-buffered like identity: wait only for
+       * ack id-1 instead of this frame's own ack. The old exact wait made the
+       * guest block on MAIN's draw + queue for every frame (~68 ms/frame on the
+       * phone, invisible in presentMs because only the identity path measured
+       * it). ack id-1 still guarantees this slot (previous user id-2) is free. */
+      const width=canvas.width,height=canvas.height,bytes=width*height*4,stride=framePixels.length>>1;
+      if(bytes>stride){
+        /* Over-sized frame: keep the original single-buffer semantics. */
+        framePixels.set(context.getImageData(0,0,width,height).data);
+        postMessage({type:'frame',id,w:width,h:height,stats:{...stats}});
+        waitFor(P.FRAME_ACK,id,20);
+      }else{
+        const off=(id&1)*stride,wait0=performance.now();
+        if(id>1)waitForAtLeast(P.FRAME_ACK,id-1,20);
+        stats.ackMs=(stats.ackMs||0)+(performance.now()-wait0);
+        const rb0=performance.now();
+        framePixels.set(context.getImageData(0,0,width,height).data,off);
+        stats.readbackMs=(stats.readbackMs||0)+(performance.now()-rb0);
+        postMessage({type:'frame',id,off,slot:id&1,w:width,h:height,stats:{...stats}});
+      }
     }else{
       const bitmap=canvas.transferToImageBitmap();postMessage({type:'frame',id,bitmap,stats:{...stats}},[bitmap]);
+      waitFor(P.FRAME_ACK,id,20);
     }
-    waitFor(P.FRAME_ACK,id,20);mod._renew_entry_budget();lastPresentDone=performance.now();
+    stats.presentMs=(stats.presentMs||0)+(performance.now()-t0);
+    mod._renew_entry_budget();lastPresentDone=performance.now();
   }};
 }
 function host(){const video=renderer();let imageName='',image=null;
