@@ -60,7 +60,7 @@ function renderer(){
      * + idas y vueltas rpc al hilo principal. Los contadores de llamadas salen
      * del host (exports) para poder estimar el costo de cada cruce wasm->JS. */
     if(lastPresentDone)stats.guestMs=(stats.guestMs||0)+(t0-lastPresentDone);
-    if(mod){stats.yieldMs=mod.aotHost.yieldMs||0;stats.hostCalls=mod._get_host_calls?mod._get_host_calls():0;stats.tickCalls=mod._get_tick_calls?mod._get_tick_calls():0;stats.pollCalls=mod._get_poll_count?mod._get_poll_count():0;stats.entries=mod._get_calls?mod._get_calls():0;}
+    if(mod){stats.yieldMs=mod.aotHost.yieldMs||0;stats.hostCalls=mod._get_host_calls?mod._get_host_calls():0;stats.tickCalls=mod._get_tick_calls?mod._get_tick_calls():0;stats.pollCalls=mod._get_poll_count?mod._get_poll_count():0;stats.entries=mod._get_calls?mod._get_calls():0;stats.yieldN=mod._get_yield_n?mod._get_yield_n():0;}
     saveIfRequested();
     const bytes=w*h*4;
     /* ¿Cabe el FUENTE (pre-escalado, w×h) en un slot del SAB? Entonces este
@@ -84,8 +84,13 @@ function renderer(){
          * present whose source size differs from the canvas — forcing the phone
          * onto the legacy readback path.) */
         const id=++frameID,stride=framePixels.length>>1,off=(id&1)*stride;
+        /* Espera SOLO ack id-2: el dueño anterior de este slot es id-2, con
+         * ack id-2 el slot está libre (mínimo exacto). Esperar ack id-1 (antes)
+         * bloqueaba el guest el ciclo completo del hilo principal (~37 ms en el
+         * celular). El memcpy puede solaparse con el putImageData de id-1 en el
+         * otro slot: distinto buffer, solo ancho de banda. */
         const wait0=performance.now();
-        if(id>1)waitForAtLeast(P.FRAME_ACK,id-1,20);
+        if(id>1)waitForAtLeast(P.FRAME_ACK,id-2,20);
         stats.ackMs=(stats.ackMs||0)+(performance.now()-wait0);
         framePixels.set(heap.subarray(ptr,ptr+bytes),off);
         stats.frames++;stats.wasmBytes=heap.buffer.byteLength;stats.workerHeapBytes=performance.memory?performance.memory.usedJSHeapSize:-1;
@@ -115,7 +120,7 @@ function renderer(){
        * id-1, como el path identidad). Si hay escalado (dw!==w) se manda el
        * fuente tal cual y el hilo principal escala con drawImage en GPU. */
       const stride=framePixels.length>>1,off=(id&1)*stride,wait0=performance.now();
-      if(id>1)waitForAtLeast(P.FRAME_ACK,id-1,20);
+      if(id>1)waitForAtLeast(P.FRAME_ACK,id-2,20); /* mínimo exacto: dueño anterior del slot = id-2 */
       stats.ackMs=(stats.ackMs||0)+(performance.now()-wait0);
       if(kind===4)framePixels.set(heap.subarray(ptr,ptr+bytes),off);
       else framePixels.set(image.data,off);
