@@ -60,10 +60,15 @@ function renderer(){
      * + idas y vueltas rpc al hilo principal. Los contadores de llamadas salen
      * del host (exports) para poder estimar el costo de cada cruce wasm->JS. */
     if(lastPresentDone)stats.guestMs=(stats.guestMs||0)+(t0-lastPresentDone);
-    if(mod){stats.yieldMs=mod.aotHost.yieldMs||0;stats.hostCalls=mod._get_host_calls?mod._get_host_calls():0;stats.tickCalls=mod._get_tick_calls?mod._get_tick_calls():0;stats.pollCalls=mod._get_poll_count?mod._get_poll_count():0;}
+    if(mod){stats.yieldMs=mod.aotHost.yieldMs||0;stats.hostCalls=mod._get_host_calls?mod._get_host_calls():0;stats.tickCalls=mod._get_tick_calls?mod._get_tick_calls():0;stats.pollCalls=mod._get_poll_count?mod._get_poll_count():0;stats.entries=mod._get_calls?mod._get_calls():0;}
     saveIfRequested();
+    const bytes=w*h*4;
+    /* ¿Cabe el FUENTE (pre-escalado, w×h) en un slot del SAB? Entonces este
+     * hilo nunca toca un canvas: sin putImageData, sin drawImage y — lo
+     * importante en el teléfono — sin getImageData (readback de GPU, que
+     * costaba decenas de ms por cuadro y ni siquiera se medía antes). */
+    const fastFrame=!!framePixels&&bytes<=(framePixels.length>>1);
     if(kind===4){/* wasm pre-converted rgb565->RGBA: zero-copy view, no JS pixel loop */
-      const bytes=w*h*4;
       if(framePixels&&dw===w&&dh===h&&bytes*2<=framePixels.length){
         /* Identity present: skip the OffscreenCanvas round trip entirely
          * (putImageData + drawImage + getImageData readback + copy cost ~4 full-frame
@@ -90,39 +95,40 @@ function renderer(){
         lastPresentDone=performance.now();
         return;
       }
-      if(source.width!==w||source.height!==h){source.width=w;source.height=h;}
-      ctx.putImageData(new ImageData(new Uint8ClampedArray(heap.buffer,ptr,bytes),w),0,0);
+      if(!fastFrame){
+        if(source.width!==w||source.height!==h){source.width=w;source.height=h;}
+        ctx.putImageData(new ImageData(new Uint8ClampedArray(heap.buffer,ptr,bytes),w),0,0);
+      }
     }else{
     if(!image||source.width!==w||source.height!==h){source.width=w;source.height=h;image=ctx.createImageData(w,h);}const out=image.data;
     if(kind===1){for(let y=0;y<h;y++){let row=ptr+y*pitch,at=y*w*4;for(let x=0;x<w;x+=2){const u=heap[row+1]-128,v=heap[row+3]-128,c0=(heap[row]-16)*298,c1=(heap[row+2]-16)*298;out[at]=(c0+409*v+128)>>8;out[at+1]=(c0-100*u-208*v+128)>>8;out[at+2]=(c0+516*u+128)>>8;out[at+3]=255;out[at+4]=(c1+409*v+128)>>8;out[at+5]=(c1-100*u-208*v+128)>>8;out[at+6]=(c1+516*u+128)>>8;out[at+7]=255;row+=4;at+=8;}}}
     else if(kind===2){const out32=new Uint32Array(out.buffer,out.byteOffset,w*h);if(((heap.byteOffset+ptr)&1)===0&&(pitch&1)===0){const src=new Uint16Array(heap.buffer),base=(heap.byteOffset+ptr)>>1,stride=pitch>>1;for(let y=0;y<h;y++){let i=base+y*stride,at=y*w;for(let x=0;x<w;x++)out32[at++]=rgb565LUT[src[i++]];}}else{for(let y=0;y<h;y++){let row=ptr+y*pitch,at=y*w;for(let x=0;x<w;x++){out32[at++]=rgb565LUT[heap[row]|heap[row+1]<<8];row+=2;}}}}
     else if(kind===3){for(let y=0;y<h;y++){let row=ptr+y*pitch,at=y*w*4;for(let x=0;x<w;x++){out[at]=heap[row];out[at+1]=heap[row+1];out[at+2]=heap[row+2];out[at+3]=255;row+=4;at+=4;}}}
     else throw Error('Formato de pantalla no soportado');
-    ctx.putImageData(image,0,0);
+    if(!fastFrame)ctx.putImageData(image,0,0);
     }
-    context.drawImage(source,0,0,dw,dh);stats.frames++;stats.wasmBytes=heap.buffer.byteLength;stats.workerHeapBytes=performance.memory?performance.memory.usedJSHeapSize:-1;
+    if(!fastFrame)context.drawImage(source,0,0,dw,dh);
+    stats.frames++;stats.wasmBytes=heap.buffer.byteLength;stats.workerHeapBytes=performance.memory?performance.memory.usedJSHeapSize:-1;
     const id=++frameID;
-    if(framePixels){
-      /* Legacy (scaled) present, double-buffered like identity: wait only for
-       * ack id-1 instead of this frame's own ack. The old exact wait made the
-       * guest block on MAIN's draw + queue for every frame (~68 ms/frame on the
-       * phone, invisible in presentMs because only the identity path measured
-       * it). ack id-1 still guarantees this slot (previous user id-2) is free. */
-      const width=canvas.width,height=canvas.height,bytes=width*height*4,stride=framePixels.length>>1;
-      if(bytes>stride){
-        /* Over-sized frame: keep the original single-buffer semantics. */
-        framePixels.set(context.getImageData(0,0,width,height).data);
-        postMessage({type:'frame',id,w:width,h:height,stats:{...stats}});
-        waitFor(P.FRAME_ACK,id,20);
-      }else{
-        const off=(id&1)*stride,wait0=performance.now();
-        if(id>1)waitForAtLeast(P.FRAME_ACK,id-1,20);
-        stats.ackMs=(stats.ackMs||0)+(performance.now()-wait0);
-        const rb0=performance.now();
-        framePixels.set(context.getImageData(0,0,width,height).data,off);
-        stats.readbackMs=(stats.readbackMs||0)+(performance.now()-rb0);
-        postMessage({type:'frame',id,off,slot:id&1,w:width,h:height,stats:{...stats}});
-      }
+    if(fastFrame){
+      /* Copia directa memoria wasm→SAB en slot doble-buffer (espera solo ack
+       * id-1, como el path identidad). Si hay escalado (dw!==w) se manda el
+       * fuente tal cual y el hilo principal escala con drawImage en GPU. */
+      const stride=framePixels.length>>1,off=(id&1)*stride,wait0=performance.now();
+      if(id>1)waitForAtLeast(P.FRAME_ACK,id-1,20);
+      stats.ackMs=(stats.ackMs||0)+(performance.now()-wait0);
+      if(kind===4)framePixels.set(heap.subarray(ptr,ptr+bytes),off);
+      else framePixels.set(image.data,off);
+      const msg={type:'frame',id,off,slot:id&1,w,h,stats:{...stats}};
+      if(dw!==w||dh!==h){msg.dw=dw;msg.dh=dh;}
+      postMessage(msg);
+    }else if(framePixels){
+      /* Marco más grande que un slot: camino original con readback. */
+      const width=canvas.width,height=canvas.height,cb=width*height*4;
+      if(cb>framePixels.length)throw Error('El frame supera el límite de memoria compartida');
+      framePixels.set(context.getImageData(0,0,width,height).data);
+      postMessage({type:'frame',id,w:width,h:height,stats:{...stats}});
+      waitFor(P.FRAME_ACK,id,20);
     }else{
       const bitmap=canvas.transferToImageBitmap();postMessage({type:'frame',id,bitmap,stats:{...stats}},[bitmap]);
       waitFor(P.FRAME_ACK,id,20);
