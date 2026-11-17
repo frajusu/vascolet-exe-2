@@ -60,7 +60,7 @@ function renderer(){
      * + idas y vueltas rpc al hilo principal. Los contadores de llamadas salen
      * del host (exports) para poder estimar el costo de cada cruce wasm->JS. */
     if(lastPresentDone)stats.guestMs=(stats.guestMs||0)+(t0-lastPresentDone);
-    if(mod){stats.yieldMs=mod.aotHost.yieldMs||0;stats.hostCalls=mod._get_host_calls?mod._get_host_calls():0;stats.tickCalls=mod._get_tick_calls?mod._get_tick_calls():0;stats.pollCalls=mod._get_poll_count?mod._get_poll_count():0;stats.entries=mod._get_calls?mod._get_calls():0;stats.yieldN=mod._get_yield_n?mod._get_yield_n():0;}
+    if(mod){stats.yieldMs=mod.aotHost.yieldMs||0;stats.hostCalls=mod._get_host_calls?mod._get_host_calls():0;stats.tickCalls=mod._get_tick_calls?mod._get_tick_calls():0;stats.pollCalls=mod._get_poll_count?mod._get_poll_count():0;stats.entries=mod._get_calls?mod._get_calls():0;stats.yieldN=mod._get_yield_n?mod._get_yield_n():0;stats.memoYuvH=mod._get_memo_yuv_hits?mod._get_memo_yuv_hits():0;stats.memoYuvM=mod._get_memo_yuv_misses?mod._get_memo_yuv_misses():0;stats.memoRgbH=mod._get_memo_rgb_hits?mod._get_memo_rgb_hits():0;stats.memoRgbM=mod._get_memo_rgb_misses?mod._get_memo_rgb_misses():0;}
     saveIfRequested();
     const bytes=w*h*4;
     /* ¿Cabe el FUENTE (pre-escalado, w×h) en un slot del SAB? Entonces este
