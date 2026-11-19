@@ -29,8 +29,9 @@ No es una certificación de todos los checkpoints o logros originales.
 
 ## Métodos evaluados
 
-- **Boxedwine multihilo JIT:** ejecuta estos cuatro juegos y conserva la vía
-  Direct3D 9 → WineD3D → WebGL. Es la alternativa seleccionada para probar.
+- **Boxedwine multihilo JIT:** ejecutaba estos cuatro juegos conservando la vía
+  Direct3D 9 → WineD3D → WebGL. Se retiró de los sitios publicados cuando la
+  URL del build upstream desapareció (404).
 - **Caché AOT de bloques JIT:** se grabó Vascolet 1 y se optimizaron 21.968
   módulos con Binaryen; el ZIP bajó de 43,8 a 22,9 MB. La reproducción no mejoró
   de forma clara el arranque y aparecieron errores de registro Wine después
@@ -53,5 +54,6 @@ No es una certificación de todos los checkpoints o logros originales.
 - [Theseus](https://github.com/evmar/theseus)
 - [Traducción estática: explicación del autor](https://neugierig.org/software/blog/2026/04/theseus.html)
 
-La opción automática usa multihilo si está disponible. En algunos equipos
-el modo de un hilo puede rendir mejor; se conserva el selector para comparar.
+La opción automática usa el motor recompilado a WebAssembly. El selector
+permite elegir además el motor CheerpX (experimental) cuando el navegador
+permite aislamiento.

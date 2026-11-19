@@ -17,7 +17,8 @@ Follow-up save/return-to-menu fixes:
 The default engine is now the original Linux i386 game statically translated
 to WebAssembly, running synchronously in a dedicated worker. It does not use
 CheerpX, Wine, Boxedwine or full-module Asyncify. Original assets are preserved.
-The previous engines remain explicitly selectable for compatibility and backups.
+The previous engines were later removed from the published sites after the
+Boxedwine build URL disappeared (404).
 
 ## Saves
 

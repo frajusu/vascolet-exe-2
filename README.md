@@ -15,9 +15,9 @@
 Este sitio corre **el ejecutable original de Vascolet 2** —el mismo `.exe` de Windows, sin modificarlo— directamente en el navegador. No es un port ni una reescritura: el programa y sus recursos viajan tal cual y se ejecutan con dos motores intercambiables desde el menú ☰:
 
 - **Recompilado a WebAssembly** (lo que elige *Automático*): el binario se recompila una vez y corre como wasm nativo del navegador; es la opción más rápida y la recomendada.
-- **Boxedwine + Wine 11**: emulación del entorno de Windows con JIT multihilo (SharedArrayBuffer y OffscreenCanvas) y respaldo de un solo hilo. CheerpX queda como experimento cuando el navegador permite aislamiento.
+- **XO · CheerpX**: motor experimental que el menú ofrece cuando el navegador permite aislamiento (SharedArrayBuffer).
 
-El arranque es directo del EXE, sin consola `cmd` ni procesos `reg` en cada inicio. La primera visita descarga el juego —y, en el motor Wine, también Wine—; después quedan en caché. Un service worker habilita COOP/COEP en GitHub Pages y pide una recarga automática la primera vez.
+El arranque es directo del EXE, sin consola `cmd` ni procesos `reg` en cada inicio. La primera visita descarga el juego y después queda en caché. Un service worker habilita COOP/COEP en GitHub Pages y pide una recarga automática la primera vez.
 
 ## Características
 
@@ -42,10 +42,9 @@ python build.py
 python -m http.server 8000 --directory dist
 ```
 
-Python 3.11+ e internet para el primer build. Actions construye `dist/` y publica GitHub Pages en cada push a `main`. Los originales se verifican con los SHA-256 de `game-manifest.json` y las descargas con `runtime.lock.json`.
+Python 3.11+ e internet para el primer build. Actions construye `dist/` y publica GitHub Pages en cada push a `main`. Los originales se verifican con los SHA-256 de `game-manifest.json`.
 
 ## Licencias y originales
 
 - Los EXE no se modificaron. **Vascolet** y sus recursos pertenecen a sus autores originales.
-- Boxedwine es GPL-2.0-or-later: ver `vendor/Boxedwine-COPYING.txt`. Wine se usa sin distribuir Microsoft Windows.
 - Notas de compatibilidad y mediciones en `TESTING.md` y `docs/`.

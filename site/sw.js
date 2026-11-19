@@ -33,13 +33,11 @@ self.addEventListener('fetch', event => {
       headers.set('Content-Range',`bytes ${start}-${end}/${bytes.byteLength}`);headers.set('Content-Length',String(end-start+1));
       return isolated(new Response(bytes.slice(start,end+1),{status:206,headers}));
     }
-    const immutable = native || /\/(?:game\.zip|runtime\/boxedwine\.zip|runtime\/(?:jit|mt)\/(?:boxedwine\.(?:wasm|js)|fsfs\.js))$/.test(url.pathname);
-    // Wine is identical across the four repositories: download and cache it once.
-    const key = url.pathname.endsWith('/runtime/boxedwine.zip') ? new URL('/__vascolet_wine_ae2ed179.zip',url.origin).href : event.request;
+    const immutable = native || url.pathname.endsWith('/game.zip');
     let cache;
-    if (immutable) { cache = await caches.open(CACHE); const hit = url.pathname.endsWith('/runtime/boxedwine.zip') ? await caches.match(key) : await cache.match(key); if (hit) return isolated(hit); }
+    if (immutable) { cache = await caches.open(CACHE); const hit = await cache.match(event.request); if (hit) return isolated(hit); }
     const response = await fetch(event.request);
-    if (cache && response.ok) event.waitUntil(cache.put(key,response.clone()).catch(() => {}));
+    if (cache && response.ok) event.waitUntil(cache.put(event.request,response.clone()).catch(() => {}));
     return isolated(response);
   })());
 });
